@@ -1,8 +1,11 @@
 import { nutritionCards } from '../data';
+import { useLang } from '../context/LanguageContext';
 
 export default function NutritionSection() {
+  const { lang, t, dir } = useLang();
+
   return (
-    <section id="nutrition" className="py-24 md:py-32 bg-dark-950 relative overflow-hidden">
+    <section id="nutrition" className="py-24 md:py-32 bg-dark-950 relative overflow-hidden" dir={dir}>
       {/* Background digital grid & light blobs */}
       <div className="absolute inset-0 digital-grid-bg opacity-20 pointer-events-none" />
       <div
@@ -17,14 +20,28 @@ export default function NutritionSection() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="animate-on-scroll section-badge inline-block mb-6">Smart Nutrition Strategy</div>
+          <div className="animate-on-scroll section-badge inline-block mb-6">
+            {t('استراتيجية التغذية الذكية', 'Smart Nutrition Strategy')}
+          </div>
           <h2 className="animate-on-scroll delay-1 section-heading mb-4">
-            تغذيتكِ استراتيجية نمو،{' '}
-            <span className="gradient-text">وليست حرماناً.</span>
+            {lang === 'ar' ? (
+              <>
+                تغذيتكِ استراتيجية نمو،{' '}
+                <span className="gradient-text">وليست حرماناً.</span>
+              </>
+            ) : (
+              <>
+                Your Nutrition is a Growth Strategy,{' '}
+                <span className="gradient-text">Not Deprivation.</span>
+              </>
+            )}
           </h2>
           <div className="divider-gold mb-6" />
           <p className="animate-on-scroll delay-2 section-subheading">
-            التغذية الذكية هي وقود التحول الجسدي. نمنحكِ أنظمة مرنة ومحسوبة بدقة لضمان أعلى مستويات الطاقة وسرعة استجابة الجسم.
+            {t(
+              'التغذية الذكية هي وقود التحول الجسدي. نمنحكِ أنظمة مرنة ومحسوبة بدقة لضمان أعلى مستويات الطاقة وسرعة استجابة الجسم.',
+              'Smart nutrition is the true engine of physical transformation. We formulate flexible, scientifically calculated plans ensuring peak daily energy and rapid body response.'
+            )}
           </p>
         </div>
 
@@ -61,17 +78,21 @@ export default function NutritionSection() {
                   {card.icon}
                 </div>
 
-                {/* Content */}
+                {/* Subtitle tag */}
                 <div className="mb-2">
                   <span className="text-[11px] font-bold tracking-widest text-gold uppercase">
-                    {card.titleEn}
+                    {lang === 'ar' ? card.titleEn : card.title}
                   </span>
                 </div>
+
+                {/* Main Title */}
                 <h3 className="text-lg md:text-xl font-bold text-white mb-3 group-hover:text-cream transition-colors">
-                  {card.title}
+                  {lang === 'ar' ? card.title : card.titleEn}
                 </h3>
+
+                {/* Description */}
                 <p className="text-sm text-taupe leading-relaxed font-medium">
-                  {card.description}
+                  {lang === 'en' && card.descriptionEn ? card.descriptionEn : card.description}
                 </p>
 
                 {/* Bottom glowing accent line */}
@@ -94,7 +115,10 @@ export default function NutritionSection() {
               boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
             }}
           >
-            💡 خطط غذائية مرنة ومصممة بأطعمة بلدكِ — سهولة وسرعة في التطبيق بدون تكاليف إضافية
+            {t(
+              '💡 خطط غذائية مرنة ومصممة بأطعمة بلدكِ — سهولة وسرعة في التطبيق بدون تكاليف إضافية',
+              '💡 Flexible nutrition plans crafted with groceries from your own country — effortless and sustainable without extra expenses'
+            )}
           </div>
         </div>
       </div>

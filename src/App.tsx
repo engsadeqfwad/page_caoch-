@@ -13,6 +13,7 @@ import FAQ from './components/FAQ';
 import FinalCTA from './components/FinalCTA';
 import Footer from './components/Footer';
 import WizardOnboarding from './components/WizardOnboarding';
+import { useLang } from './context/LanguageContext';
 
 // 1. Standalone Dedicated Questionnaire Assessment Page (First Entry / Entry Point)
 function AssessmentPage() {
@@ -29,6 +30,8 @@ function AssessmentPage() {
 
 // 2. Full Website Homepage Page (/home)
 function HomePage() {
+  const { dir, lang } = useLang();
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     const observer = new IntersectionObserver(
@@ -49,7 +52,7 @@ function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-dark-950 text-right" dir="rtl">
+    <div className={`min-h-screen bg-dark-950 ${lang === 'ar' ? 'text-right' : 'text-left'}`} dir={dir}>
       <Navbar />
       <main>
         <Hero />

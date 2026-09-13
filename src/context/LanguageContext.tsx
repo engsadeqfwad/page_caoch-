@@ -5,7 +5,7 @@ export type Lang = 'ar' | 'en';
 interface LanguageContextType {
   lang: Lang;
   setLang: (l: Lang) => void;
-  t: (ar: string, en: string) => string;
+  t: <T>(ar: T, en: T) => T;
   dir: 'rtl' | 'ltr';
 }
 
@@ -34,7 +34,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = lang;
   }, []);
 
-  const t = (ar: string, en: string) => lang === 'ar' ? ar : en;
+  const t = <T,>(ar: T, en: T): T => (lang === 'ar' ? ar : en);
   const dir: 'rtl' | 'ltr' = lang === 'ar' ? 'rtl' : 'ltr';
 
   return (

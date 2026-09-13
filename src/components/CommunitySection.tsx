@@ -1,65 +1,137 @@
-const communityFeatures = [
-  { icon: '👩', label: 'Women Only', desc: 'مجتمع نسائي خاص ومغلق بالكامل' },
-  { icon: '🏆', label: 'Challenges', desc: 'تحديات شهرية حماسية ومحفزة' },
-  { icon: '💬', label: 'Discussions', desc: 'نقاشات وتوجيهات داعمة باستمرار' },
-  { icon: '🎉', label: 'Wins', desc: 'احتفال وإبراز لكل تحول وإنجاز' },
-  { icon: '❓', label: 'Questions', desc: 'أسئلة وإجابات مباشرة مع الكوتش' },
-  { icon: '✨', label: 'Motivation', desc: 'شغف وإلهام يومي متواصل' },
-  { icon: '🤝', label: 'Accountability', desc: 'دعم ومساءلة تمنع التكاسل' },
-];
-
-const mockPosts = [
-  {
-    id: 1,
-    avatar: '👩‍🦱',
-    name: 'سارة',
-    time: 'منذ 2 ساعة',
-    content: 'أنهيت الأسبوع الثالث من مسار زيادة الوزن الصحي والنتيجة زيادة 2 كيلو ونص، ولاحظت الامتلاء حصل في الأرداف والأفخاذ والصدر بشكل ملحوظ الحمدلله 🤍✨',
-    likes: 42,
-    replies: 15,
-    tag: 'زيادة وزن صحية 📈',
-    tagColor: '#BA785C',
-  },
-  {
-    id: 2,
-    avatar: '👩‍🦰',
-    name: 'نور',
-    time: 'منذ 4 ساعات',
-    content: 'بنات والله مو مصدقة! الميزان ثابت تقريباً بس المقاسات والخصر فرق كأنها إنسانة ثانية! جسمي انشد والترهلات اختفت تماماً 😍🔥',
-    likes: 56,
-    replies: 19,
-    tag: 'إعادة تشكيل الجسم ✨',
-    tagColor: '#EFD0D5',
-  },
-  {
-    id: 3,
-    avatar: '🧕',
-    name: 'ريم',
-    time: 'منذ يوم',
-    content: 'التزمت بالمسار التغذوي والتدريبي وحسيت بفرق هائل في نشاطي وارتياح الجهاز الهضمي والقولون من أول أسبوع! المنظومة تجنن 💖',
-    likes: 89,
-    replies: 28,
-    tag: 'راحة وعافية 🌿',
-    tagColor: '#BA785C',
-  },
-];
+import { useLang } from '../context/LanguageContext';
 
 export default function CommunitySection() {
+  const { lang, t, dir } = useLang();
+
+  const communityFeatures = [
+    {
+      icon: '👩',
+      labelAr: 'مجتمع نسائي فقط',
+      labelEn: 'Women Only',
+      descAr: 'مجتمع نسائي خاص ومغلق بالكامل',
+      descEn: 'Exclusive, completely closed women-only community',
+    },
+    {
+      icon: '🏆',
+      labelAr: 'تحديات مستمرة',
+      labelEn: 'Challenges',
+      descAr: 'تحديات شهرية حماسية ومحفزة',
+      descEn: 'Exciting and motivating monthly challenges',
+    },
+    {
+      icon: '💬',
+      labelAr: 'نقاشات وتوجيه',
+      labelEn: 'Discussions',
+      descAr: 'نقاشات وتوجيهات داعمة باستمرار',
+      descEn: 'Supportive daily discussions & coach guidance',
+    },
+    {
+      icon: '🎉',
+      labelAr: 'إنجازات ونجاحات',
+      labelEn: 'Wins & Results',
+      descAr: 'احتفال وإبراز لكل تحول وإنجاز',
+      descEn: 'Celebrating and spotlighting every transformation',
+    },
+    {
+      icon: '❓',
+      labelAr: 'أسئلة مع الكوتش',
+      labelEn: 'Direct Q&A',
+      descAr: 'أسئلة وإجابات مباشرة مع الكوتش',
+      descEn: 'Direct Q&A sessions with Coach Hanan',
+    },
+    {
+      icon: '✨',
+      labelAr: 'شغف وإلهام',
+      labelEn: 'Daily Motivation',
+      descAr: 'شغف وإلهام يومي متواصل',
+      descEn: 'Unstoppable daily inspiration and drive',
+    },
+    {
+      icon: '🤝',
+      labelAr: 'مساءلة والتزام',
+      labelEn: 'Accountability',
+      descAr: 'دعم ومساءلة تمنع التكاسل',
+      descEn: 'Consistent accountability preventing setbacks',
+    },
+  ];
+
+  const mockPosts = [
+    {
+      id: 1,
+      avatar: '👩‍🦱',
+      nameAr: 'سارة',
+      nameEn: 'Sarah',
+      timeAr: 'منذ ساعتين',
+      timeEn: '2 hours ago',
+      contentAr: 'أنهيت الأسبوع الثالث من مسار زيادة الوزن الصحي والنتيجة زيادة 2 كيلو ونص، ولاحظت الامتلاء حصل في الأرداف والأفخاذ والصدر بشكل ملحوظ الحمدلله 🤍✨',
+      contentEn: 'Completed week 3 of the Healthy Weight Gain path with +2.5 kg! I noticed feminine fullness in my glutes, thighs, and chest noticeably alhamdulillah 🤍✨',
+      likes: 42,
+      replies: 15,
+      tagAr: 'زيادة وزن صحية 📈',
+      tagEn: 'Healthy Weight Gain 📈',
+      tagColor: '#BA785C',
+    },
+    {
+      id: 2,
+      avatar: '👩‍🦰',
+      nameAr: 'نور',
+      nameEn: 'Noor',
+      timeAr: 'منذ 4 ساعات',
+      timeEn: '4 hours ago',
+      contentAr: 'بنات والله مو مصدقة! الميزان ثابت تقريباً بس المقاسات والخصر فرق كأنها إنسانة ثانية! جسمي انشد والترهلات اختفت تماماً 😍🔥',
+      contentEn: "Girls, I can't believe it! The scale is almost steady, but my measurements and waist look like an entirely different person! My body is toned and firm 😍🔥",
+      likes: 56,
+      replies: 19,
+      tagAr: 'إعادة تشكيل الجسم ✨',
+      tagEn: 'Body Recomposition ✨',
+      tagColor: '#EFD0D5',
+    },
+    {
+      id: 3,
+      avatar: '🧕',
+      nameAr: 'ريم',
+      nameEn: 'Reem',
+      timeAr: 'منذ يوم',
+      timeEn: '1 day ago',
+      contentAr: 'التزمت بالمسار التغذوي والتدريبي وحسيت بفرق هائل في نشاطي وارتياح الجهاز الهضمي والقولون من أول أسبوع! المنظومة تجنن 💖',
+      contentEn: 'Committed to the nutrition and training protocol and felt a huge surge in daily energy, with total digestive and IBS relief from week one! The system is incredible 💖',
+      likes: 89,
+      replies: 28,
+      tagAr: 'راحة وعافية 🌿',
+      tagEn: 'Digestive Wellness 🌿',
+      tagColor: '#BA785C',
+    },
+  ];
+
   return (
-    <section className="py-24 md:py-32 bg-dark-900 relative overflow-hidden">
+    <section className="py-24 md:py-32 bg-dark-900 relative overflow-hidden" dir={dir}>
       <div className="absolute inset-0 digital-dots-bg opacity-20 pointer-events-none" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <div className="animate-on-scroll section-badge inline-block mb-6">Digital Women's Community</div>
+          <div className="animate-on-scroll section-badge inline-block mb-6">
+            {t('مجتمع رقمي نسائي', "Digital Women's Community")}
+          </div>
           <h2 className="animate-on-scroll delay-1 section-heading mb-4">
-            أنتِ لستِ وحدكِ.{' '}
-            <span className="gradient-text">مجتمع كامل يحفزكِ يومياً.</span>
+            {lang === 'ar' ? (
+              <>
+                أنتِ لستِ وحدكِ.{' '}
+                <span className="gradient-text">مجتمع كامل يحفزكِ يومياً.</span>
+              </>
+            ) : (
+              <>
+                You Are Not Alone.{' '}
+                <span className="gradient-text">An Entire Sisterhood Powers You.</span>
+              </>
+            )}
           </h2>
           <div className="divider-gold mb-6" />
           <p className="animate-on-scroll delay-2 section-subheading">
-            بيئة نسائية رقمية فاخرة تجمع المشتركات الشغوفات لتبادل الخبرات، الاحتفال بالإنجازات، وضمان عدم التكاسل.
+            {t(
+              'بيئة نسائية رقمية فاخرة تجمع المشتركات الشغوفات لتبادل الخبرات، الاحتفال بالإنجازات، وضمان عدم التكاسل.',
+              'A luxury digital female space gathering ambitious women to share experiences, celebrate achievements, and ensure relentless momentum.'
+            )}
           </p>
         </div>
 
@@ -69,7 +141,7 @@ export default function CommunitySection() {
             <div className="grid grid-cols-2 gap-3">
               {communityFeatures.map((feature, i) => (
                 <div
-                  key={feature.label}
+                  key={feature.labelEn}
                   className={`group rounded-2xl p-4 md:p-5 transition-all duration-300 hover:-translate-y-1 cursor-default
                     ${i === 0 ? 'col-span-2' : ''}
                   `}
@@ -87,10 +159,10 @@ export default function CommunitySection() {
                     <span className="text-2xl">{feature.icon}</span>
                     <div>
                       <p className={`font-bold text-sm ${i === 0 ? 'text-white' : 'text-cream'}`}>
-                        {feature.label}
+                        {lang === 'ar' ? feature.labelAr : feature.labelEn}
                       </p>
                       <p className={`text-xs mt-0.5 ${i === 0 ? 'text-cream/80' : 'text-taupe'}`}>
-                        {feature.desc}
+                        {lang === 'ar' ? feature.descAr : feature.descEn}
                       </p>
                     </div>
                   </div>
@@ -99,86 +171,74 @@ export default function CommunitySection() {
             </div>
           </div>
 
-          {/* Mock community feed */}
+          {/* Interactive Community Feed Preview */}
           <div className="animate-on-scroll delay-2">
             <div
-              className="rounded-4xl overflow-hidden"
+              className="rounded-3xl p-6 border relative"
               style={{
-                background: '#1F0811',
-                border: '1px solid rgba(239,208,213,0.25)',
-                boxShadow: '0 15px 50px rgba(0,0,0,0.6)',
+                background: 'linear-gradient(145deg, rgba(31,8,17,0.95) 0%, rgba(63,20,37,0.8) 100%)',
+                borderColor: 'rgba(239,208,213,0.2)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
               }}
             >
-              {/* Header bar */}
-              <div
-                className="px-6 py-4 flex items-center justify-between"
-                style={{ background: '#2A0B18', borderBottom: '1px solid rgba(239,208,213,0.15)' }}
-              >
+              {/* Header inside feed box */}
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-white">المجتمع النسائي الحصري</span>
-                  <span
-                    className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-gold/20 text-gold border border-gold/30"
-                  >
-                    Women Only
+                  <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs font-bold text-cream">
+                    {t('مقتطفات من تجارب المشتركات الحية', 'Live Highlights from Members')}
                   </span>
                 </div>
-                <div className="flex gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-gold" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-pink-300" />
-                </div>
+                <span className="text-[11px] text-gold font-bold">
+                  {t('عضوات نشطات الآن', 'Active Members Now')}
+                </span>
               </div>
 
-              {/* Posts */}
-              <div className="p-4 space-y-3">
+              {/* Feed Items */}
+              <div className="space-y-4">
                 {mockPosts.map((post) => (
                   <div
                     key={post.id}
-                    className="rounded-2xl p-4 transition-all duration-300 hover:border-gold/40"
-                    style={{
-                      background: 'rgba(63,20,37,0.5)',
-                      border: '1px solid rgba(239,208,213,0.15)',
-                    }}
+                    className="p-4 rounded-2xl bg-dark-900/80 border border-white/5 hover:border-gold/30 transition-colors"
                   >
-                    {/* Post header */}
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl">{post.avatar}</span>
+                        <span className="text-xl">{post.avatar}</span>
                         <div>
-                          <p className="text-sm font-bold text-white">{post.name}</p>
-                          <p className="text-[10px] text-taupe">{post.time}</p>
+                          <span className="text-xs font-bold text-white block">
+                            {lang === 'ar' ? post.nameAr : post.nameEn}
+                          </span>
+                          <span className="text-[10px] text-taupe">
+                            {lang === 'ar' ? post.timeAr : post.timeEn}
+                          </span>
                         </div>
                       </div>
                       <span
-                        className="text-[11px] px-2.5 py-1 rounded-full font-bold bg-dark-800 text-gold border border-gold/30"
+                        className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
+                        style={{
+                          background: `${post.tagColor}20`,
+                          color: post.tagColor,
+                          border: `1px solid ${post.tagColor}40`,
+                        }}
                       >
-                        {post.tag}
+                        {lang === 'ar' ? post.tagAr : post.tagEn}
                       </span>
                     </div>
 
-                    {/* Post content */}
-                    <p className="text-sm text-cream/90 leading-relaxed mb-3 font-medium">{post.content}</p>
+                    <p className="text-xs md:text-sm text-cream/90 leading-relaxed mb-3 font-medium">
+                      {lang === 'ar' ? post.contentAr : post.contentEn}
+                    </p>
 
-                    {/* Post footer */}
-                    <div className="flex items-center gap-4 text-taupe">
-                      <button className="flex items-center gap-1 text-xs hover:text-gold transition-colors font-semibold">
-                        <span className="text-rose-400">♥</span>
-                        <span>{post.likes}</span>
-                      </button>
-                      <button className="flex items-center gap-1 text-xs hover:text-gold transition-colors font-semibold">
-                        <span>💬</span>
-                        <span>{post.replies} ردود</span>
-                      </button>
+                    <div className="flex items-center gap-4 text-[11px] text-taupe pt-2 border-t border-white/5">
+                      <span className="flex items-center gap-1 hover:text-gold cursor-pointer">
+                        ❤️ {post.likes}
+                      </span>
+                      <span className="flex items-center gap-1 hover:text-gold cursor-pointer">
+                        💬 {post.replies} {t('تعليق وتشجيع', 'cheers')}
+                      </span>
                     </div>
                   </div>
                 ))}
-
-                {/* Blur overlay - more coming */}
-                <div
-                  className="rounded-2xl p-4 text-center bg-dark-800/60 border border-dashed border-gold/30 opacity-80"
-                >
-                  <p className="text-xs text-taupe font-semibold">+ التقي بتشجيع مئات المشتركات داخل العضوية</p>
-                </div>
               </div>
             </div>
           </div>

@@ -84,8 +84,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     pathId: 'feminine-shape',
     trainingLocation: 'home',
     lifestyle: 'office',
-    healthIssues: t('لا يوجد', 'None'),
-    medications: t('لا يوجد', 'None'),
+    healthIssues: 'لا يوجد',
+    medications: 'لا يوجد',
     phone: '',
     instagram: '',
     selectedPlanId: 'plus',
@@ -117,7 +117,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   let physicalNeed: 'weight-gain' | 'moderate-gain' | 'ideal' | 'fat-loss' | 'high-fat-loss' = 'ideal';
 
   if (bmiValue < 18.5) {
-    bmiCategory = t('نقص في الوزن (يحتاج زيادة امتلاء أنثوي)', 'Underweight (Needs feminine weight gain)');
+    bmiCategory = t('نقص في الوزن (يحتاج زيادة امتلاء أنثوي)', 'Underweight (Needs feminine fullness & weight gain)');
     bmiColor = 'text-amber-400';
     physicalNeed = 'weight-gain';
   } else if (bmiValue >= 18.5 && bmiValue <= 21.0) {
@@ -165,7 +165,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     advisoryTitle = t('✅ توافق ممتاز مع التحليل البدني', '✅ Excellent Match with Physical Analysis');
     advisoryMessage = t(
       `اختياركِ لمسار «${selectedPathObj.title}» متوافق تماماً مع مؤشر كتلة جسمكِ الحالي (${bmiCategory})، وسيقوم النظام بتفصيل احتياجكِ بناءً عليه.`,
-      `Your choice of the «${selectedPathObj.subtitle}» path perfectly aligns with your current BMI (${bmiCategory}). The program will be tailored to your needs accordingly.`
+      `Your choice of the «${selectedPathObj.titleEn || selectedPathObj.subtitle}» path aligns smoothly with your current BMI (${bmiCategory}). The program will be tailored to your goals accordingly.`
     );
   }
 
@@ -288,11 +288,60 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     }
   };
 
-  // LanguageToggle overlay for wizard screens
-  const LangToggleFixed = () => (
-    <div className="fixed top-4 left-4 z-[999]">
-      <LanguageToggle />
-    </div>
+  // -------------------------------------------------------------
+  // REUSABLE TOP BAR COMPONENT (Contains Back Button, Step Counter, Progress Bar & Language Toggle)
+  // -------------------------------------------------------------
+  const WizardTopBar = ({ 
+    onBack, 
+    stepLabel, 
+    percent,
+    showProgress = true 
+  }: { 
+    onBack: () => void; 
+    stepLabel: string; 
+    percent: number;
+    showProgress?: boolean;
+  }) => (
+    <header className="sticky top-0 z-40 bg-dark-950/90 backdrop-blur-md border-b border-white/10 px-4 py-3 shadow-lg">
+      <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+        {/* Back Button */}
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-cream font-bold text-xs md:text-sm border border-white/10 transition-all active:scale-95 shrink-0"
+        >
+          {lang === 'ar' ? <ArrowRight size={16} className="text-gold" /> : <ArrowLeft size={16} className="text-gold" />}
+          <span>{t('السابق', 'Back')}</span>
+        </button>
+
+        {/* Step Status and Counter in Center */}
+        <div className="flex flex-col items-center justify-center text-center">
+          <span className="text-xs md:text-sm font-extrabold text-white">
+            {stepLabel}
+          </span>
+          {showProgress && (
+            <span className="text-[11px] font-bold text-gold">
+              {percent}%
+            </span>
+          )}
+        </div>
+
+        {/* Integrated Language Switcher on opposite side */}
+        <div className="shrink-0">
+          <LanguageToggle />
+        </div>
+      </div>
+
+      {/* Progress Track Line */}
+      {showProgress && (
+        <div className="max-w-3xl mx-auto w-full mt-2.5 h-1.5 rounded-full bg-dark-900 overflow-hidden border border-white/5">
+          <div 
+            className="h-full bg-gradient-to-r from-rose-500 via-gold to-amber-400 transition-all duration-300 rounded-full"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+      )}
+    </header>
   );
 
   // -------------------------------------------------------------
@@ -300,13 +349,22 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   // -------------------------------------------------------------
   if (step === 'welcome') {
     return (
-      <div className="min-h-screen bg-dark-950 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden" dir={dir}>
-        <LangToggleFixed />
+      <div className="min-h-screen bg-dark-950 flex flex-col justify-between px-4 py-6 relative overflow-hidden" dir={dir}>
+        {/* Top Floating Language Toggle */}
+        <div className="w-full max-w-xl mx-auto flex justify-between items-center py-2 relative z-20">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold tracking-wider text-gold uppercase">
+              {t('المدربة حنان خالد', 'Coach Hanan Khalid')}
+            </span>
+          </div>
+          <LanguageToggle />
+        </div>
+
         {/* Glowing Ambient Radial Glow */}
         <div className="absolute inset-0 bg-dark-radial pointer-events-none" />
         <div className="absolute inset-0 digital-grid-bg opacity-20 pointer-events-none" />
         
-        <div className="relative z-10 max-w-xl w-full text-center space-y-6">
+        <div className="relative z-10 max-w-xl w-full mx-auto text-center space-y-6 my-auto">
           
           {/* Header Logo */}
           <div className="flex flex-col items-center gap-3 mb-2">
@@ -355,6 +413,10 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
 
         </div>
+
+        <div className="py-2 text-center text-[11px] text-taupe/60">
+          {t('منظومة التدريب والتغذية الذكية © 2026', 'Smart Coaching & Nutrition System © 2026')}
+        </div>
       </div>
     );
   }
@@ -364,10 +426,13 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   // -------------------------------------------------------------
   if (step === 'calculating') {
     return (
-      <div className="min-h-screen bg-dark-950 flex items-center justify-center px-4 py-12 relative" dir={dir}>
-        <LangToggleFixed />
+      <div className="min-h-screen bg-dark-950 flex flex-col justify-between px-4 py-8 relative" dir={dir}>
+        <div className="w-full max-w-md mx-auto flex justify-end">
+          <LanguageToggle />
+        </div>
+
         <div className="absolute inset-0 bg-dark-radial" />
-        <div className="relative z-10 max-w-md w-full text-center space-y-8">
+        <div className="relative z-10 max-w-md w-full mx-auto text-center space-y-8 my-auto">
           
           <div className="text-6xl md:text-7xl font-black gradient-text animate-pulse">
             {calcProgress}%
@@ -391,14 +456,14 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
 
           {/* Dynamic Checklist */}
-          <div className="space-y-3 text-right bg-dark-900/60 p-5 rounded-2xl border border-white/10">
+          <div className={`space-y-3 bg-dark-900/60 p-5 rounded-2xl border border-white/10 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
             {[
               { labelAr: 'تحليل إجاباتكِ والبيانات البدنية', labelEn: 'Analyzing your answers and physical data' },
               { labelAr: 'حساب مؤشر كتلة الجسم (BMI)', labelEn: 'Calculating BMI index' },
               { labelAr: 'تحديد مسار التغذية والتمارين المناسب', labelEn: 'Determining suitable nutrition and training path' },
               { labelAr: 'تجهيز توصية الخطة والباقة النهائية', labelEn: 'Preparing the plan recommendation and final package' },
             ].map((item, idx) => (
-              <div key={idx} className={`flex items-center gap-3 text-sm ${lang === 'ar' ? 'flex-row' : 'flex-row-reverse text-left'}`}>
+              <div key={idx} className="flex items-center gap-3 text-sm">
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors shrink-0 ${checkState[idx] ? 'bg-gold text-dark-950' : 'border border-taupe/40 text-transparent'}`}>
                   <Check size={12} strokeWidth={3} />
                 </div>
@@ -410,6 +475,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
 
         </div>
+
+        <div className="py-2" />
       </div>
     );
   }
@@ -418,14 +485,22 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   // RENDER STEP 3: RECOMMENDATION & PACKAGE SELECTION
   // -------------------------------------------------------------
   if (step === 'recommendation') {
-    const selectedPathObj = paths.find((p) => p.id === formData.pathId) || paths[0];
-
     return (
-      <div className="min-h-screen bg-dark-950 py-12 px-4 relative" dir={dir}>
-        <LangToggleFixed />
+      <div className="min-h-screen bg-dark-950 flex flex-col relative" dir={dir}>
+        {/* Top Header Bar with Back Button to Questions and Step Status */}
+        <WizardTopBar
+          onBack={() => {
+            setStep('questions');
+            setQIndex(6);
+          }}
+          stepLabel={t('النتيجة والتوصية النهائية 🎯', 'Final Result & Recommendation 🎯')}
+          percent={100}
+          showProgress={true}
+        />
+
         <div className="absolute inset-0 bg-dark-radial pointer-events-none" />
         
-        <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+        <div className="relative z-10 max-w-3xl mx-auto w-full px-4 py-8 space-y-8 flex-1">
           
           {/* Header Banner */}
           <div className="text-center space-y-3">
@@ -434,18 +509,18 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
               {t('نتيجة التحليل وتوصية البرنامج', 'Analysis Result & Program Recommendation')}
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-white">
-              {t('مسار', 'Path:')} <span className="gradient-text">«{lang === 'ar' ? selectedPathObj.title : selectedPathObj.subtitle}»</span> 🎯
+              {t('مسار', 'Path:')} <span className="gradient-text">«{lang === 'ar' ? selectedPathObj.title : (selectedPathObj.titleEn || selectedPathObj.subtitle)}»</span> 🎯
             </h1>
-            <p className="text-taupe text-sm leading-relaxed max-w-xl mx-auto">
+            <p className="text-taupe text-sm leading-relaxed max-w-xl mx-auto font-medium">
               {t(
                 `بناءً على نتائج قياساتكِ البدنية (BMI: ${bmiValue} — ${bmiCategory}) وهدفكِ المحدد، صممنا لكِ باقات المتابعة التالية:`,
-                `Based on your physical measurements (BMI: ${bmiValue} — ${bmiCategory}) and your defined goal, we designed the following coaching packages:`
+                `Based on your physical measurements (BMI: ${bmiValue} — ${bmiCategory}) and your specified goal, we tailored the following coaching packages:`
               )}
             </p>
           </div>
 
           {/* Physical Need & Path Alignment Advisory Banner Card */}
-          <div className={`p-5 rounded-2xl border text-right max-w-xl mx-auto space-y-2 shadow-luxury ${
+          <div className={`p-5 rounded-2xl border max-w-xl mx-auto space-y-2 shadow-luxury ${lang === 'ar' ? 'text-right' : 'text-left'} ${
             isMisaligned 
               ? 'bg-amber-950/90 border-amber-500/60 text-amber-200' 
               : 'bg-emerald-950/70 border-emerald-500/50 text-emerald-200'
@@ -481,25 +556,27 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                   <h3 className="text-xl font-extrabold text-white mb-2">
                     {lang === 'ar' ? tier.name : tier.nameEn}
                   </h3>
-                  <p className="text-xs text-taupe mb-6 leading-relaxed">{tier.description}</p>
+                  <p className="text-xs text-taupe mb-6 leading-relaxed font-medium">
+                    {lang === 'en' && tier.descriptionEn ? tier.descriptionEn : tier.description}
+                  </p>
                   
                   {/* Price Box */}
                   <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-6 flex items-baseline justify-between">
                     <div>
                       <span className="text-3xl font-black text-white">{tier.priceSAR}</span>
-                      <span className="text-xs text-taupe font-bold mr-1">
+                      <span className="text-xs text-taupe font-bold mx-1">
                         {t('ريال سعودي', 'SAR')}
                       </span>
                     </div>
                     <span className="text-lg font-bold text-gold">{tier.priceUSD}$</span>
                   </div>
 
-                  {/* Features */}
+                  {/* Features List */}
                   <div className="space-y-2.5 mb-8">
-                    {tier.features.map((feat, idx) => (
-                      <div key={idx} className={`flex items-center gap-2.5 text-xs md:text-sm text-cream ${lang === 'en' ? 'flex-row-reverse' : ''}`}>
-                        <CheckCircle2 size={16} className="text-gold shrink-0" />
-                        <span>{feat}</span>
+                    {(lang === 'en' && tier.featuresEn ? tier.featuresEn : tier.features).map((feat, idx) => (
+                      <div key={idx} className="flex items-start gap-2.5 text-xs md:text-sm text-cream">
+                        <CheckCircle2 size={16} className="text-gold shrink-0 mt-0.5" />
+                        <span className="leading-snug">{feat}</span>
                       </div>
                     ))}
                   </div>
@@ -523,6 +600,21 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
             ))}
           </div>
 
+          {/* Quick return to modify responses */}
+          <div className="text-center pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setStep('questions');
+                setQIndex(6);
+              }}
+              className="text-xs text-taupe hover:text-gold transition-colors inline-flex items-center gap-1.5 font-bold"
+            >
+              {lang === 'ar' ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
+              <span>{t('الرجوع لتعديل إجاباتكِ أو قياساتكِ', 'Go back to modify your answers or measurements')}</span>
+            </button>
+          </div>
+
         </div>
       </div>
     );
@@ -534,7 +626,13 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   if (step === 'success') {
     return (
       <div className="min-h-screen bg-dark-950 py-12 px-4 relative" dir={dir}>
-        <LangToggleFixed />
+        <div className="w-full max-w-4xl mx-auto flex justify-between items-center mb-6">
+          <Link to="/home" className="text-xs font-bold text-gold hover:underline">
+            {t('← الانتقال للصفحة الرئيسية', '← Go to Homepage')}
+          </Link>
+          <LanguageToggle />
+        </div>
+
         <div className="absolute inset-0 bg-dark-radial pointer-events-none" />
         
         <div className="relative z-10 max-w-4xl mx-auto space-y-8 text-center">
@@ -562,7 +660,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
             </p>
 
             {/* Physical Alignment Note inside Success Box */}
-            <div className={`p-4 rounded-2xl border text-right space-y-1 text-xs md:text-sm font-medium ${
+            <div className={`p-4 rounded-2xl border space-y-1 text-xs md:text-sm font-medium ${lang === 'ar' ? 'text-right' : 'text-left'} ${
               isMisaligned
                 ? 'bg-amber-950/80 border-amber-500/50 text-amber-200'
                 : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-200'
@@ -572,7 +670,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
             </div>
           </div>
 
-          {/* Full Informational Section extracted from user screenshots */}
+          {/* Full Informational Section */}
           <SubscriptionTermsInfo />
 
           {/* CTA Button to Navigate to Homepage */}
@@ -595,35 +693,21 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   // RENDER STEP 5: QUESTIONNAIRE WIZARD (7 QUESTIONS)
   // -------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-dark-950 flex flex-col justify-between py-6 px-4 relative" dir={dir}>
-      <LangToggleFixed />
+    <div className="min-h-screen bg-dark-950 flex flex-col justify-between relative" dir={dir}>
+      {/* Sleek Top Header Bar with Back Button, Step Indicator & Language Switcher */}
+      <WizardTopBar
+        onBack={handlePrevQuestion}
+        stepLabel={t(`الخطوة ${currentStepNum} من ${TOTAL_STEPS}`, `Step ${currentStepNum} of ${TOTAL_STEPS}`)}
+        percent={progressPercent}
+        showProgress={true}
+      />
       
       {/* Background Decor */}
       <div className="absolute inset-0 bg-dark-radial pointer-events-none" />
       <div className="absolute inset-0 digital-grid-bg opacity-15 pointer-events-none" />
 
-      {/* Top Header & Progress Bar */}
-      <div className="relative z-10 max-w-2xl mx-auto w-full pt-2">
-        <div className="flex items-center justify-between text-xs text-taupe mb-2 font-bold">
-          <button onClick={handlePrevQuestion} className="flex items-center gap-1 hover:text-white transition-colors">
-            {lang === 'ar' ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
-            {t('السابق', 'Back')}
-          </button>
-          <span>{t(`الخطوة ${currentStepNum} من ${TOTAL_STEPS}`, `Step ${currentStepNum} of ${TOTAL_STEPS}`)}</span>
-          <span className="text-gold font-extrabold">{progressPercent}%</span>
-        </div>
-
-        {/* Progress Bar Track */}
-        <div className="w-full h-2 rounded-full bg-dark-900 overflow-hidden border border-white/10">
-          <div 
-            className="h-full bg-gradient-to-r from-rose-500 via-gold to-amber-400 transition-all duration-300 rounded-full"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-      </div>
-
       {/* Main Question Card Container */}
-      <div className="relative z-10 max-w-2xl mx-auto w-full my-auto py-8">
+      <div className="relative z-10 max-w-2xl mx-auto w-full my-auto px-4 py-8">
         
         {errorMsg && (
           <div className="mb-6 p-4 rounded-2xl bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs md:text-sm flex items-center gap-2">
@@ -760,16 +844,16 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     key={p.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, pathId: p.id })}
-                    className={`w-full p-4 rounded-2xl border text-right transition-all flex items-center justify-between ${
+                    className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between ${lang === 'ar' ? 'text-right' : 'text-left'} ${
                       isSelected
                         ? 'bg-gold/15 border-gold shadow-neon-gold text-white'
                         : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
                     }`}
                   >
-                    <div>
-                      <div className="flex items-center gap-2 mb-0.5">
+                    <div className="flex-1 pr-2">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-bold text-sm text-white">
-                          {lang === 'ar' ? p.title : p.subtitle}
+                          {lang === 'ar' ? p.title : (p.titleEn || p.subtitle)}
                         </span>
                         {isRecommendedForBody && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gold/20 text-gold border border-gold/30">
@@ -777,11 +861,11 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-taupe/80">
-                        {lang === 'ar' ? p.subtitle : p.title}
+                      <div className="text-xs text-taupe/90 font-medium leading-relaxed">
+                        {lang === 'en' && p.descriptionEn ? p.descriptionEn : p.description}
                       </div>
                     </div>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${isSelected ? 'bg-gold border-gold text-dark-950' : 'border-taupe/40'}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 mx-2 ${isSelected ? 'bg-gold border-gold text-dark-950' : 'border-taupe/40'}`}>
                       {isSelected && <Check size={14} strokeWidth={3} />}
                     </div>
                   </button>
@@ -814,7 +898,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     key={loc.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, trainingLocation: loc.id })}
-                    className={`p-5 rounded-2xl border text-right transition-all flex flex-col justify-between h-36 ${
+                    className={`p-5 rounded-2xl border transition-all flex flex-col justify-between h-36 ${lang === 'ar' ? 'text-right' : 'text-left'} ${
                       isSelected
                         ? 'bg-gold/15 border-gold text-white shadow-neon-gold'
                         : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
@@ -826,7 +910,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     <div className="text-xs text-taupe/80 font-medium">
                       {lang === 'ar' ? loc.descAr : loc.descEn}
                     </div>
-                    <div className="self-end">
+                    <div className={lang === 'ar' ? 'self-end' : 'self-end'}>
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${isSelected ? 'bg-gold border-gold text-dark-950' : 'border-taupe/40'}`}>
                         {isSelected && <Check size={12} strokeWidth={3} />}
                       </div>
@@ -863,7 +947,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     key={opt.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, lifestyle: opt.id })}
-                    className={`w-full p-4 rounded-2xl border text-right transition-all flex items-center justify-between ${
+                    className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between ${lang === 'ar' ? 'text-right' : 'text-left'} ${
                       isSelected
                         ? 'bg-gold/15 border-gold text-white shadow-neon-gold'
                         : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
@@ -882,25 +966,25 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
         )}
 
-        {/* QUESTION 5: Health Conditions & Medications */}
+        {/* QUESTION 5: Health Issues & Medications */}
         {qIndex === 5 && (
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
-                {t('الحالة الصحية والأدوية 🩺', 'Health Conditions & Medications 🩺')}
+                {t('الاعتبارات الصحية والأدوية 🩺', 'Health Considerations & Medications 🩺')}
               </h2>
               <p className="text-taupe text-xs md:text-sm font-medium">
-                {t('لنضمن ملاءمة النظام لسلامتكِ (مثل خمول الغدة، تكيسات المبايض، القولون...).', 'To ensure the program is safe for you (e.g., thyroid, PCOS, IBS...).')}
+                {t('نراعي أدق التفاصيل لضمان نظام صحي آمن تماماً لصحتكِ.', 'We consider every detail to ensure a 100% safe and therapeutic plan for you.')}
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-cream mb-2">
-                  {t('هل لديكِ أي مشاكل صحية؟', 'Do you have any health conditions?')}
+                  {t('هل تعانين من أي مشاكل صحية؟', 'Do you have any health conditions?')}
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   value={formData.healthIssues}
                   onChange={(e) => setFormData({ ...formData, healthIssues: e.target.value })}
                   placeholder={t('مثال: تكيسات مبايض، خمول غدة، قولون عصبي... (إذا لا يوجد اكتبي: لا يوجد)', 'e.g., PCOS, hypothyroidism, IBS... (If none, write: None)')}
@@ -979,7 +1063,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                             autoFocus
                           />
                         </div>
-                        <div className="overflow-y-auto space-y-1 max-h-48 text-right pr-1">
+                        <div className="overflow-y-auto space-y-1 max-h-48 pr-1">
                           {filteredCountries.map((c) => (
                             <button
                               key={c.name + c.dialCode}
@@ -1016,12 +1100,12 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="501234567"
-                    className="form-input flex-1 text-right text-base font-bold dir-ltr"
+                    className="form-input flex-1 text-base font-bold dir-ltr"
                   />
                 </div>
 
                 <span className="text-[11px] text-taupe/70 mt-1.5 block">
-                  {t('سيتم التواصل الفوري عبر الواتساب على الرقم المفعل كـ: ', 'You will be contacted on: ')}
+                  {t('سيتم التواصل الفوري عبر الواتساب على الرقم المفعل كـ: ', 'You will be contacted on WhatsApp as: ')}
                   <span className="text-gold font-bold dir-ltr inline-block">{selectedCountry.dialCode} {formData.phone || '50xxxxxxx'}</span>
                 </span>
               </div>
@@ -1039,7 +1123,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     value={formData.instagram}
                     onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
                     placeholder="username"
-                    className="form-input w-full pr-9 text-right"
+                    className="form-input w-full pr-9"
+                    dir="ltr"
                   />
                 </div>
               </div>
@@ -1050,7 +1135,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
       </div>
 
       {/* Bottom Action Footer */}
-      <div className="relative z-10 max-w-2xl mx-auto w-full pt-4 pb-2">
+      <div className="relative z-10 max-w-2xl mx-auto w-full px-4 pt-4 pb-6">
         <button
           onClick={handleNextQuestion}
           className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold via-amber-500 to-gold text-dark-950 font-extrabold text-base md:text-lg shadow-neon-gold hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
