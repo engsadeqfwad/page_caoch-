@@ -289,7 +289,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   };
 
   // -------------------------------------------------------------
-  // REUSABLE TOP BAR COMPONENT (Contains Back Button, Step Counter, Progress Bar & Language Toggle)
+  // REUSABLE TOP BAR (Natural transparent header blending into the page background)
   // -------------------------------------------------------------
   const WizardTopBar = ({ 
     onBack, 
@@ -302,46 +302,44 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     percent: number;
     showProgress?: boolean;
   }) => (
-    <header className="sticky top-0 z-40 bg-dark-950/90 backdrop-blur-md border-b border-white/10 px-4 py-3 shadow-lg">
-      <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+    <div className="relative z-20 max-w-2xl mx-auto w-full pt-4 pb-2">
+      <div className="flex items-center justify-between text-xs text-taupe mb-2.5 font-bold">
         {/* Back Button */}
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-cream font-bold text-xs md:text-sm border border-white/10 transition-all active:scale-95 shrink-0"
+          className="flex items-center gap-1.5 hover:text-white transition-colors"
         >
           {lang === 'ar' ? <ArrowRight size={16} className="text-gold" /> : <ArrowLeft size={16} className="text-gold" />}
           <span>{t('السابق', 'Back')}</span>
         </button>
 
         {/* Step Status and Counter in Center */}
-        <div className="flex flex-col items-center justify-center text-center">
-          <span className="text-xs md:text-sm font-extrabold text-white">
-            {stepLabel}
-          </span>
+        <span className="text-xs md:text-sm font-bold text-white/90">
+          {stepLabel}
+        </span>
+
+        {/* Progress % and Language Toggle */}
+        <div className="flex items-center gap-3">
           {showProgress && (
-            <span className="text-[11px] font-bold text-gold">
+            <span className="text-xs font-extrabold text-gold">
               {percent}%
             </span>
           )}
-        </div>
-
-        {/* Integrated Language Switcher on opposite side */}
-        <div className="shrink-0">
           <LanguageToggle />
         </div>
       </div>
 
       {/* Progress Track Line */}
       {showProgress && (
-        <div className="max-w-3xl mx-auto w-full mt-2.5 h-1.5 rounded-full bg-dark-900 overflow-hidden border border-white/5">
+        <div className="w-full h-2 rounded-full bg-dark-900 overflow-hidden border border-white/10">
           <div 
             className="h-full bg-gradient-to-r from-rose-500 via-gold to-amber-400 transition-all duration-300 rounded-full"
             style={{ width: `${percent}%` }}
           />
         </div>
       )}
-    </header>
+    </div>
   );
 
   // -------------------------------------------------------------
@@ -350,7 +348,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   if (step === 'welcome') {
     return (
       <div className="min-h-screen bg-dark-950 flex flex-col justify-between px-4 py-6 relative overflow-hidden" dir={dir}>
-        {/* Top Floating Language Toggle */}
+        {/* Top Language Toggle */}
         <div className="w-full max-w-xl mx-auto flex justify-between items-center py-2 relative z-20">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold tracking-wider text-gold uppercase">
@@ -486,8 +484,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   // -------------------------------------------------------------
   if (step === 'recommendation') {
     return (
-      <div className="min-h-screen bg-dark-950 flex flex-col relative" dir={dir}>
-        {/* Top Header Bar with Back Button to Questions and Step Status */}
+      <div className="min-h-screen bg-dark-950 flex flex-col relative px-4 py-4" dir={dir}>
+        {/* Top Header Bar without background */}
         <WizardTopBar
           onBack={() => {
             setStep('questions');
@@ -500,7 +498,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
 
         <div className="absolute inset-0 bg-dark-radial pointer-events-none" />
         
-        <div className="relative z-10 max-w-3xl mx-auto w-full px-4 py-8 space-y-8 flex-1">
+        <div className="relative z-10 max-w-3xl mx-auto w-full px-2 py-6 space-y-8 flex-1">
           
           {/* Header Banner */}
           <div className="text-center space-y-3">
@@ -693,8 +691,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   // RENDER STEP 5: QUESTIONNAIRE WIZARD (7 QUESTIONS)
   // -------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-dark-950 flex flex-col justify-between relative" dir={dir}>
-      {/* Sleek Top Header Bar with Back Button, Step Indicator & Language Switcher */}
+    <div className="min-h-screen bg-dark-950 flex flex-col px-4 py-3 relative" dir={dir}>
+      {/* Sleek Natural Top Bar (Without background or border) */}
       <WizardTopBar
         onBack={handlePrevQuestion}
         stepLabel={t(`الخطوة ${currentStepNum} من ${TOTAL_STEPS}`, `Step ${currentStepNum} of ${TOTAL_STEPS}`)}
@@ -706,8 +704,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
       <div className="absolute inset-0 bg-dark-radial pointer-events-none" />
       <div className="absolute inset-0 digital-grid-bg opacity-15 pointer-events-none" />
 
-      {/* Main Question Card Container */}
-      <div className="relative z-10 max-w-2xl mx-auto w-full my-auto px-4 py-8">
+      {/* Main Question Card Container with Action Button Directly Below Fields */}
+      <div className="relative z-10 max-w-2xl mx-auto w-full my-auto px-2 py-4">
         
         {errorMsg && (
           <div className="mb-6 p-4 rounded-2xl bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs md:text-sm flex items-center gap-2">
@@ -910,7 +908,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     <div className="text-xs text-taupe/80 font-medium">
                       {lang === 'ar' ? loc.descAr : loc.descEn}
                     </div>
-                    <div className={lang === 'ar' ? 'self-end' : 'self-end'}>
+                    <div className="self-end">
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${isSelected ? 'bg-gold border-gold text-dark-950' : 'border-taupe/40'}`}>
                         {isSelected && <Check size={12} strokeWidth={3} />}
                       </div>
@@ -1132,20 +1130,20 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
         )}
 
-      </div>
+        {/* Action CTA Button: Placed directly below the fields in the same container, responsive to empty space */}
+        <div className="pt-8 pb-4">
+          <button
+            onClick={handleNextQuestion}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold via-amber-500 to-gold text-dark-950 font-extrabold text-base md:text-lg shadow-neon-gold hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+          >
+            {qIndex === 6
+              ? t('إظهار التوصية والنتيجة ✨', 'Show Recommendation & Result ✨')
+              : t('متابعة', 'Continue')
+            }
+            {lang === 'ar' ? <ArrowLeft size={20} /> : <ArrowRight size={20} />}
+          </button>
+        </div>
 
-      {/* Bottom Action Footer */}
-      <div className="relative z-10 max-w-2xl mx-auto w-full px-4 pt-4 pb-6">
-        <button
-          onClick={handleNextQuestion}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold via-amber-500 to-gold text-dark-950 font-extrabold text-base md:text-lg shadow-neon-gold hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
-        >
-          {qIndex === 6
-            ? t('إظهار التوصية والنتيجة ✨', 'Show Recommendation & Result ✨')
-            : t('متابعة', 'Continue')
-          }
-          {lang === 'ar' ? <ArrowLeft size={20} /> : <ArrowRight size={20} />}
-        </button>
       </div>
 
     </div>
