@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import logoImg from '../assets/logo.png';
-
-const navLinks = [
-  { label: 'المسارات', href: '#paths' },
-  { label: 'التغذية', href: '#nutrition' },
-  { label: 'كيف تعمل', href: '#journey' },
-  { label: 'الأسئلة', href: '#faq' },
-];
+import LanguageToggle from './LanguageToggle';
+import { useLang } from '../context/LanguageContext';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { lang, t } = useLang();
+
+  const navLinks = [
+    { label: t('المسارات', 'Paths'), href: '#paths' },
+    { label: t('التغذية', 'Nutrition'), href: '#nutrition' },
+    { label: t('كيف تعمل', 'How It Works'), href: '#journey' },
+    { label: t('الأسئلة', 'FAQ'), href: '#faq' },
+  ];
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 40);
@@ -51,9 +54,9 @@ export default function Navbar() {
                   className="h-10 md:h-12 w-auto object-contain rounded-full"
                 />
               </div>
-              <div className="flex flex-col leading-tight">
+              <div className={`flex flex-col leading-tight ${lang === 'en' ? 'text-left' : 'text-right'}`}>
                 <span className="text-base md:text-lg font-bold text-white tracking-wide">
-                  د/ك : حنان خالد
+                  {t('د/ك : حنان خالد', 'Coach: Hanan Khalid')}
                 </span>
                 <span className="text-[10px] font-semibold tracking-widest uppercase text-gold">
                   Women's Fitness Coach
@@ -75,18 +78,21 @@ export default function Navbar() {
               ))}
             </nav>
 
-            {/* CTA + Mobile Menu */}
+            {/* CTA + Language Toggle + Mobile Menu */}
             <div className="flex items-center gap-3">
+              {/* Language Toggle — always visible */}
+              <LanguageToggle />
+
               <button
                 onClick={() => handleLinkClick('#paths')}
                 className="hidden md:inline-flex btn-primary text-sm px-6 py-2.5 shadow-neon-bronze"
               >
-                اكتشفي مساركِ
+                {t('اكتشفي مساركِ', 'Find Your Path')}
               </button>
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="lg:hidden p-2 rounded-xl text-white bg-dark-800/80 border border-beige/20 hover:bg-dark-700 transition-colors"
-                aria-label="قائمة التنقل"
+                aria-label={t('قائمة التنقل', 'Navigation menu')}
               >
                 {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
@@ -105,7 +111,7 @@ export default function Navbar() {
               <button
                 key={link.href}
                 onClick={() => handleLinkClick(link.href)}
-                className="block w-full text-right px-4 py-3 text-white font-semibold rounded-xl hover:bg-dark-800 transition-colors duration-200"
+                className={`block w-full px-4 py-3 text-white font-semibold rounded-xl hover:bg-dark-800 transition-colors duration-200 ${lang === 'ar' ? 'text-right' : 'text-left'}`}
               >
                 {link.label}
               </button>
@@ -115,13 +121,12 @@ export default function Navbar() {
                 onClick={() => handleLinkClick('#paths')}
                 className="w-full btn-primary"
               >
-                اكتشفي مساركِ
+                {t('اكتشفي مساركِ', 'Find Your Path')}
               </button>
             </div>
           </div>
         </div>
       </header>
-
     </>
   );
 }
