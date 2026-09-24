@@ -21,7 +21,7 @@ import SubscriptionTermsInfo from './SubscriptionTermsInfo';
 import LanguageToggle from './LanguageToggle';
 import { useLang } from '../context/LanguageContext';
 
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/maewaaoj';
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xljdlwvy';
 
 export interface CountryCode {
   name: string;
@@ -270,6 +270,14 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           الأدوية: formData.medications,
           نمط_الحياة: formData.lifestyle,
           اللغة_المستخدمة: lang === 'ar' ? 'العربية' : 'الإنجليزية',
+          وقت_الطلب_الفعلي: new Date().toLocaleString('ar-EG', {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          }),
         }),
       });
 
