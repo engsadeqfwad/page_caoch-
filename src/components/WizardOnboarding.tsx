@@ -19,6 +19,7 @@ import logoImg from '../assets/logo.png';
 import { paths, pricingTiers } from '../data';
 import SubscriptionTermsInfo from './SubscriptionTermsInfo';
 import LanguageToggle from './LanguageToggle';
+import WheelPicker from './WheelPicker';
 import { useLang } from '../context/LanguageContext';
 
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xljdlwvy';
@@ -77,15 +78,17 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
 
   // Form Data State
   const [formData, setFormData] = useState({
-    age: '24',
-    country: '',
-    height: 165,
-    weight: 62,
     pathId: 'feminine-shape',
-    trainingLocation: 'home',
+    trainingLocation: 'home', // 'gym' | 'home' | 'both'
+    fitnessLevel: 'intermediate', // 'beginner' | 'intermediate' | 'advanced'
+    workoutDaysPerWeek: '3', // '2' | '3' | '4' | '5'
     lifestyle: 'office',
     healthIssues: 'لا يوجد',
     medications: 'لا يوجد',
+    height: 160,
+    weight: 60,
+    age: 25,
+    country: 'السعودية',
     phone: '',
     instagram: '',
     selectedPlanId: 'plus',
@@ -205,21 +208,21 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     }
   }, [step]);
 
-  const TOTAL_STEPS = 7;
+  const TOTAL_STEPS = 9;
   const currentStepNum = qIndex + 1;
   const progressPercent = Math.round((currentStepNum / TOTAL_STEPS) * 100);
 
   const handleNextQuestion = () => {
     setErrorMsg('');
-    if (qIndex === 0 && (!formData.age || !formData.country.trim())) {
-      setErrorMsg(t('يرجى تحديد العمر والدولة قبل المتابعة', 'Please enter your age and country before continuing'));
-      return;
-    }
     if (qIndex === 5 && (!formData.healthIssues.trim() || !formData.medications.trim())) {
       setErrorMsg(t('يرجى توضيح الحالة الصحية والأدوية (أو كتابة «لا يوجد»)', 'Please clarify your health conditions and medications (or write "None")'));
       return;
     }
-    if (qIndex === 6) {
+    if (qIndex === 8) {
+      if (!formData.country.trim()) {
+        setErrorMsg(t('يرجى تحديد أو كتابة الدولة', 'Please specify your country'));
+        return;
+      }
       if (!formData.phone.trim() || formData.phone.length < 8) {
         setErrorMsg(t('يرجى إدخال رقم الواتساب بشكل صحيح لكي نستطيع التواصل معكِ', 'Please enter a valid WhatsApp number so we can contact you'));
         return;
@@ -256,19 +259,27 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
           باقة_الاشتراك: `${chosenTier.name} — ${chosenTier.priceSAR} ريال / ${chosenTier.duration}`,
-          رقم_الواتساب: `${selectedCountry.dialCode} ${formData.phone.trim()}`,
-          يوزر_الانستجرام: `@${formData.instagram.replace('@', '')}`,
-          العمر: formData.age,
+          المسار_المختار: chosenPath,
+          مكان_التدريب: 
+            formData.trainingLocation === 'gym' ? '🏋️‍♀️ النادي (Gym)' :
+            formData.trainingLocation === 'both' ? '🔄 المنزل والنادي معاً (Home & Gym)' :
+            '🏠 المنزل (Home)',
+          مستوى_اللياقة: 
+            formData.fitnessLevel === 'beginner' ? 'مبتدئة (Beginner)' :
+            formData.fitnessLevel === 'advanced' ? 'متقدمة (Advanced)' :
+            'متوسطة (Intermediate)',
+          أيام_التمرين_أسبوعياً: `${formData.workoutDaysPerWeek} أيام أسبوعياً`,
+          العمر: `${formData.age} سنة`,
           الدولة: formData.country,
-          الطول_سم: formData.height,
-          الوزن_كغ: formData.weight,
+          الطول_سم: `${formData.height} سم`,
+          الوزن_كغ: `${formData.weight} كجم`,
           مؤشر_BMI: `${bmiValue} (${bmiCategory})`,
           توافق_المسار_مع_البدن: isMisaligned ? '⚠️ تحذير: المسار المختار لا يتناسب مع كتلة الجسم وتلزم المراجعة' : '✅ متوافق تماماً مع كتلة الجسم',
-          المسار_المختار: chosenPath,
-          مكان_التدريب: formData.trainingLocation === 'home' ? '🏠 المنزل (Home)' : '🏋️‍♀️ الجيم (Gym)',
+          رقم_الواتساب: `${selectedCountry.dialCode} ${formData.phone.trim()}`,
+          يوزر_الانستجرام: `@${formData.instagram.replace('@', '')}`,
+          نمط_الحياة: formData.lifestyle,
           المشاكل_الصحية: formData.healthIssues,
           الأدوية: formData.medications,
-          نمط_الحياة: formData.lifestyle,
           اللغة_المستخدمة: lang === 'ar' ? 'العربية' : 'الإنجليزية',
           وقت_الطلب_الفعلي: new Date().toLocaleString('ar-EG', {
             year: 'numeric',
@@ -497,7 +508,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         <WizardTopBar
           onBack={() => {
             setStep('questions');
-            setQIndex(6);
+            setQIndex(8);
           }}
           stepLabel={t('النتيجة والتوصية النهائية 🎯', 'Final Result & Recommendation 🎯')}
           percent={100}
@@ -612,7 +623,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
               type="button"
               onClick={() => {
                 setStep('questions');
-                setQIndex(6);
+                setQIndex(8);
               }}
               className="text-xs text-taupe hover:text-gold transition-colors inline-flex items-center gap-1.5 font-bold"
             >
@@ -722,112 +733,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
         )}
 
-        {/* QUESTION 0: Age & Country */}
+        {/* QUESTION 0: Goal & Path Selection */}
         {qIndex === 0 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
-                {t('كم عمركِ وفي أي دولة تقيمين؟', 'How old are you and which country do you live in?')}
-              </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
-                {t('تساعدنا هذه البيانات في تحديد احتياجكِ وملاءمة الأطعمة المحلية لكِ.', 'This information helps us determine your needs and adapt local food options for you.')}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-cream mb-2">
-                  {t('العمر (بالسنوات)', 'Age (in years)')}
-                </label>
-                <input
-                  type="number"
-                  value={formData.age}
-                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                  placeholder="24"
-                  className="form-input w-full text-center text-lg font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-cream mb-2">
-                  {t('الدولة التي تقيمين فيها', 'Country of residence')}
-                </label>
-                <input
-                  type="text"
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  placeholder={t('مثال: السعودية، الإمارات، الكويت...', 'e.g., Saudi Arabia, UAE, Kuwait...')}
-                  className="form-input w-full"
-                  dir="auto"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* QUESTION 1: Height & Weight */}
-        {qIndex === 1 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
-                {t('كم طولكِ ووزنكِ الحالي؟', 'What is your current height and weight?')}
-              </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
-                {t('هذه المعلومة لحساب مؤشر كتلة الجسم (BMI) وتخصيص خطتكِ الفردية.', 'This information is used to calculate your BMI and personalize your individual plan.')}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* Height Selector Card */}
-              <div className="p-4 rounded-2xl bg-dark-900 border border-white/10 text-center space-y-3">
-                <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-taupe">
-                  <Ruler size={16} className="text-gold" />
-                  <span>{t('الطول (سم)', 'Height (cm)')}</span>
-                </div>
-                <div className="text-3xl font-black text-white">{formData.height} <span className="text-sm font-normal text-taupe">cm</span></div>
-                <div className="flex justify-center gap-2">
-                  <button 
-                    onClick={() => setFormData({ ...formData, height: Math.max(130, formData.height - 1) })}
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg border border-white/10"
-                  >-</button>
-                  <button 
-                    onClick={() => setFormData({ ...formData, height: Math.min(210, formData.height + 1) })}
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg border border-white/10"
-                  >+</button>
-                </div>
-              </div>
-
-              {/* Weight Selector Card */}
-              <div className="p-4 rounded-2xl bg-dark-900 border border-white/10 text-center space-y-3">
-                <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-taupe">
-                  <Scale size={16} className="text-rose-400" />
-                  <span>{t('الوزن الحالي (كجم)', 'Current Weight (kg)')}</span>
-                </div>
-                <div className="text-3xl font-black text-white">{formData.weight} <span className="text-sm font-normal text-taupe">kg</span></div>
-                <div className="flex justify-center gap-2">
-                  <button 
-                    onClick={() => setFormData({ ...formData, weight: Math.max(30, formData.weight - 1) })}
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg border border-white/10"
-                  >-</button>
-                  <button 
-                    onClick={() => setFormData({ ...formData, weight: Math.min(180, formData.weight + 1) })}
-                    className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg border border-white/10"
-                  >+</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Calculated BMI Card */}
-            <div className="p-5 rounded-2xl bg-dark-900/90 border border-gold/30 text-center space-y-1 shadow-luxury">
-              <div className="text-xs font-bold text-taupe">{t('مؤشر كتلة الجسم (BMI)', 'Body Mass Index (BMI)')}</div>
-              <div className="text-4xl font-black text-white">{bmiValue}</div>
-              <div className={`text-sm font-bold ${bmiColor}`}>{bmiCategory}</div>
-            </div>
-          </div>
-        )}
-
-        {/* QUESTION 2: Goal & Path Selection */}
-        {qIndex === 2 && (
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
@@ -881,22 +788,44 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
         )}
 
-        {/* QUESTION 3: Training Location */}
-        {qIndex === 3 && (
+        {/* QUESTION 1: Training Location */}
+        {qIndex === 1 && (
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
-                {t('أين تفضلين ممارسة التمارين الرياضية؟ 🏋️‍♀️', 'Where do you prefer to exercise? 🏋️‍♀️')}
+                {t('أين تفضلين التمرين؟', 'Where do you prefer to exercise?')}
               </h2>
               <p className="text-taupe text-xs md:text-sm font-medium">
-                {t('المنظومة تدعم الخيارين (البيت أو النادي) بنفس الكفاءة والشروحات.', 'The program supports both options (home or gym) with equal efficiency and instructions.')}
+                {t('المنظومة تدعم جميع الخيارات بنفس الكفاءة والشروحات الكاملة.', 'The program supports all options with equal efficiency and full instructions.')}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3.5">
               {[
-                { id: 'home', titleAr: '🏠 في المنزل', titleEn: '🏠 At Home', descAr: 'أدوات بسيطة أو وزن الجسم', descEn: 'Simple equipment or bodyweight' },
-                { id: 'gym', titleAr: '🏋️‍♀️ في الجيم', titleEn: '🏋️‍♀️ At the Gym', descAr: 'أجهزة وأوزان النادي', descEn: 'Gym machines and weights' },
+                { 
+                  id: 'gym', 
+                  titleAr: 'النادي', 
+                  titleEn: 'At the Gym', 
+                  icon: '🏋️‍♀️',
+                  descAr: 'تمارين بأجهزة وأوزان النادي المتكاملة',
+                  descEn: 'Full gym machines and weight equipment'
+                },
+                { 
+                  id: 'home', 
+                  titleAr: 'المنزل', 
+                  titleEn: 'At Home', 
+                  icon: '🏠',
+                  descAr: 'تمارين بوزن الجسم وأدوات منزلية بسيطة',
+                  descEn: 'Bodyweight and simple home tools'
+                },
+                { 
+                  id: 'both', 
+                  titleAr: 'المنزل والنادي معًا', 
+                  titleEn: 'Home and Gym Together', 
+                  icon: '🔄',
+                  descAr: 'مرونة التنقل بين البيت والجيم حسب أسبوعكِ',
+                  descEn: 'Flexible switching between home and gym'
+                },
               ].map((loc) => {
                 const isSelected = formData.trainingLocation === loc.id;
                 return (
@@ -904,21 +833,148 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     key={loc.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, trainingLocation: loc.id })}
-                    className={`p-5 rounded-2xl border transition-all flex flex-col justify-between h-36 ${lang === 'ar' ? 'text-right' : 'text-left'} ${
+                    className={`w-full p-4.5 rounded-2xl border transition-all duration-200 flex items-center justify-between cursor-pointer ${lang === 'ar' ? 'text-right' : 'text-left'} ${
                       isSelected
                         ? 'bg-gold/15 border-gold text-white shadow-neon-gold'
                         : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
                     }`}
                   >
-                    <div className="text-lg font-bold text-white">
-                      {lang === 'ar' ? loc.titleAr : loc.titleEn}
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
+                      isSelected ? 'bg-gold border-gold text-dark-950' : 'border-white/20 bg-dark-950/60'
+                    }`}>
+                      {isSelected && <Check size={14} strokeWidth={3} />}
                     </div>
-                    <div className="text-xs text-taupe/80 font-medium">
-                      {lang === 'ar' ? loc.descAr : loc.descEn}
+
+                    <div className="flex-1 mx-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-base md:text-lg text-white">
+                          {lang === 'ar' ? loc.titleAr : loc.titleEn}
+                        </span>
+                        <span className="text-xl">{loc.icon}</span>
+                      </div>
+                      <div className="text-xs text-taupe/80 font-medium mt-0.5">
+                        {lang === 'ar' ? loc.descAr : loc.descEn}
+                      </div>
                     </div>
-                    <div className="self-end">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${isSelected ? 'bg-gold border-gold text-dark-950' : 'border-taupe/40'}`}>
-                        {isSelected && <Check size={12} strokeWidth={3} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* QUESTION 2: Fitness Level */}
+        {qIndex === 2 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+                {t('ما هو مستواكِ؟', 'What is your fitness level?')}
+              </h2>
+              <p className="text-taupe text-xs md:text-sm font-medium">
+                {t('لبناء التدرج الحركي المناسب لمستواكِ وتفادي أي إرهاق أو إصابات.', 'To structure the right movement progression and prevent fatigue.')}
+              </p>
+            </div>
+
+            <div className="space-y-3.5">
+              {[
+                { 
+                  id: 'beginner', 
+                  titleAr: 'مبتدئة', 
+                  titleEn: 'Beginner',
+                  descAr: 'جديدة على التمارين أو عودة بعد انقطاع طويل',
+                  descEn: 'New to workouts or returning after a long break'
+                },
+                { 
+                  id: 'intermediate', 
+                  titleAr: 'متوسطة', 
+                  titleEn: 'Intermediate',
+                  descAr: 'لديّ معرفة بالتمارين وأمارس الرياضة بشكل متقطع',
+                  descEn: 'Familiar with exercises and workout intermittently'
+                },
+                { 
+                  id: 'advanced', 
+                  titleAr: 'متقدمة', 
+                  titleEn: 'Advanced',
+                  descAr: 'ملتزمة بانتظام وأتحكم بالأوزان والتكنيك بكفاءة',
+                  descEn: 'Regularly committed with solid form and weights'
+                },
+              ].map((lvl) => {
+                const isSelected = formData.fitnessLevel === lvl.id;
+                return (
+                  <button
+                    key={lvl.id}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, fitnessLevel: lvl.id })}
+                    className={`w-full p-4.5 rounded-2xl border transition-all duration-200 flex items-center justify-between cursor-pointer ${lang === 'ar' ? 'text-right' : 'text-left'} ${
+                      isSelected
+                        ? 'bg-gold/15 border-gold text-white shadow-neon-gold'
+                        : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
+                      isSelected ? 'bg-gold border-gold text-dark-950' : 'border-white/20 bg-dark-950/60'
+                    }`}>
+                      {isSelected && <Check size={14} strokeWidth={3} />}
+                    </div>
+
+                    <div className="flex-1 mx-4">
+                      <div className="font-extrabold text-base md:text-lg text-white">
+                        {lang === 'ar' ? lvl.titleAr : lvl.titleEn}
+                      </div>
+                      <div className="text-xs text-taupe/80 font-medium mt-0.5">
+                        {lang === 'ar' ? lvl.descAr : lvl.descEn}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* QUESTION 3: Workout Frequency */}
+        {qIndex === 3 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+                {t('كم مرة تستطيعين التمرين أسبوعياً؟', 'How many times can you workout per week?')}
+              </h2>
+              <p className="text-taupe text-xs md:text-sm font-medium">
+                {t('نصمم جدول التمارين بما يتوافق مع وقتكِ وروتينكِ الأسبوعي.', 'We tailor your training schedule around your available time and routine.')}
+              </p>
+            </div>
+
+            <div className="space-y-3.5">
+              {[
+                { id: '2', titleAr: '2 أيام', titleEn: '2 Days', descAr: 'جدول مرن للمشغولات جداً أو للمحافظة على النشاط', descEn: 'Flexible schedule for busy routines' },
+                { id: '3', titleAr: '3 أيام', titleEn: '3 Days', descAr: 'التوازن المثالي بين النتائج والاستمرارية', descEn: 'Ideal balance between results and consistency' },
+                { id: '4', titleAr: '4 أيام', titleEn: '4 Days', descAr: 'تركيز أعمق على نحت الجسم وتفصيل القوام', descEn: 'Deeper focus on body sculpting and tone' },
+                { id: '5', titleAr: '5 أيام', titleEn: '5 Days', descAr: 'كثافة رياضية عالية لنتائج سريعة متقدمة', descEn: 'High athletic intensity for accelerated results' },
+              ].map((opt) => {
+                const isSelected = formData.workoutDaysPerWeek === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, workoutDaysPerWeek: opt.id })}
+                    className={`w-full p-4.5 rounded-2xl border transition-all duration-200 flex items-center justify-between cursor-pointer ${lang === 'ar' ? 'text-right' : 'text-left'} ${
+                      isSelected
+                        ? 'bg-gold/15 border-gold text-white shadow-neon-gold'
+                        : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
+                      isSelected ? 'bg-gold border-gold text-dark-950' : 'border-white/20 bg-dark-950/60'
+                    }`}>
+                      {isSelected && <Check size={14} strokeWidth={3} />}
+                    </div>
+
+                    <div className="flex-1 mx-4">
+                      <div className="font-extrabold text-base md:text-lg text-white">
+                        {lang === 'ar' ? opt.titleAr : opt.titleEn}
+                      </div>
+                      <div className="text-xs text-taupe/80 font-medium mt-0.5">
+                        {lang === 'ar' ? opt.descAr : opt.descEn}
                       </div>
                     </div>
                   </button>
@@ -953,18 +1009,20 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     key={opt.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, lifestyle: opt.id })}
-                    className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between ${lang === 'ar' ? 'text-right' : 'text-left'} ${
+                    className={`w-full p-4.5 rounded-2xl border transition-all flex items-center justify-between ${lang === 'ar' ? 'text-right' : 'text-left'} ${
                       isSelected
                         ? 'bg-gold/15 border-gold text-white shadow-neon-gold'
                         : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
                     }`}
                   >
-                    <span className="font-bold text-sm text-white">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
+                      isSelected ? 'bg-gold border-gold text-dark-950' : 'border-white/20 bg-dark-950/60'
+                    }`}>
+                      {isSelected && <Check size={14} strokeWidth={3} />}
+                    </div>
+                    <span className="font-bold text-sm md:text-base text-white flex-1 mx-4">
                       {lang === 'ar' ? opt.labelAr : opt.labelEn}
                     </span>
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${isSelected ? 'bg-gold border-gold text-dark-950' : 'border-taupe/40'}`}>
-                      {isSelected && <Check size={12} strokeWidth={3} />}
-                    </div>
                   </button>
                 );
               })}
@@ -1016,19 +1074,116 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
         )}
 
-        {/* QUESTION 6: Contact Info (Phone Number + Instagram Username) */}
+        {/* QUESTION 6: Height & Weight with Dual WheelPicker */}
         {qIndex === 6 && (
           <div className="space-y-6">
-            <div>
+            <div className="text-center md:text-right">
               <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
-                {t('وسائل التواصل المباشرة 📱', 'Direct Contact Information 📱')}
+                {t('كم طولكِ ووزنكِ؟', 'What is your height and weight?')}
               </h2>
               <p className="text-taupe text-xs md:text-sm font-medium">
-                {t('أدخلي رقم الواتساب والإنستجرام لتتواصل معكِ المدربة حنان خالد فوراً.', 'Enter your WhatsApp number and Instagram so Coach Hanan Khalid can contact you right away.')}
+                {t('هذي المعلومة لحساب مؤشر كتلة الجسم وتخصيص خطتكِ.', 'This information is used to calculate your BMI and personalize your plan.')}
               </p>
             </div>
 
+            {/* Dual Smooth WheelPickers (Side-by-side for Height and Weight) */}
+            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+              <WheelPicker
+                label={t('الطول', 'Height')}
+                unit={t('سم', 'cm')}
+                value={formData.height}
+                onChange={(val) => setFormData({ ...formData, height: val })}
+                min={130}
+                max={220}
+                icon={<Ruler size={14} className="text-gold" />}
+              />
+              <WheelPicker
+                label={t('الوزن الحالي', 'Current Weight')}
+                unit={t('كجم', 'kg')}
+                value={formData.weight}
+                onChange={(val) => setFormData({ ...formData, weight: val })}
+                min={35}
+                max={180}
+                icon={<Scale size={14} className="text-rose-400" />}
+              />
+            </div>
+
+            {/* Calculated BMI Card (As in Reference Image 4) */}
+            <div className="p-4.5 rounded-2xl bg-dark-900/90 border border-gold/30 text-center space-y-1 shadow-luxury max-w-md mx-auto">
+              <div className="text-xs font-bold text-taupe">{t('مؤشر كتلة الجسم (BMI)', 'Body Mass Index (BMI)')}</div>
+              <div className="text-3xl md:text-4xl font-black text-white">{bmiValue}</div>
+              <div className={`text-sm font-bold ${bmiColor}`}>{bmiCategory}</div>
+            </div>
+          </div>
+        )}
+
+        {/* QUESTION 7: Age with Smooth WheelPicker */}
+        {qIndex === 7 && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+                {t('كم عمرك؟', 'How old are you?')}
+              </h2>
+              <p className="text-taupe text-xs md:text-sm font-medium">
+                {t('لملاءمة شدة التمارين ومعدلات الاستشفاء والتمثيل الغذائي بدقة.', 'To calibrate workout intensity, recovery rates, and metabolism.')}
+              </p>
+            </div>
+
+            {/* Single Smooth WheelPicker for Age */}
+            <div className="max-w-[240px] mx-auto py-2">
+              <WheelPicker
+                unit={t('سنة', 'yrs')}
+                value={formData.age}
+                onChange={(val) => setFormData({ ...formData, age: val })}
+                min={15}
+                max={80}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* QUESTION 8: Direct Contact Info & Country */}
+        {qIndex === 8 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+                {t('وسائل التواصل ومكان الإقامة 📱', 'Contact Info & Residence 📱')}
+              </h2>
+              <p className="text-taupe text-xs md:text-sm font-medium">
+                {t('أدخلي رقم الواتساب وحساب الإنستجرام لتتواصل معكِ المدربة حنان خالد شخصياً.', 'Enter your WhatsApp and Instagram so Coach Hanan Khalid can contact you personally.')}
+              </p>
+            </div>
+
+            {/* Mini Recap Chips of User Choices */}
+            <div className="p-3 rounded-2xl bg-dark-900/60 border border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-cream">
+              <div className="flex items-center gap-1.5 text-gold">
+                <span>🎯 {lang === 'ar' ? selectedPathObj.title : (selectedPathObj.titleEn || selectedPathObj.subtitle)}</span>
+              </div>
+              <div className="flex items-center gap-3 text-taupe">
+                <span>🎂 {formData.age} {t('سنة', 'yrs')}</span>
+                <span>📏 {formData.height} {t('سم', 'cm')}</span>
+                <span>⚖️ {formData.weight} {t('كجم', 'kg')}</span>
+              </div>
+            </div>
+
             <div className="space-y-4">
+              {/* Country Selection Input / Quick Picker */}
+              <div>
+                <label className="block text-xs font-bold text-cream mb-2">
+                  {t('الدولة التي تقيمين فيها', 'Country of residence')} <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    placeholder={t('مثال: السعودية، الإمارات، الكويت، مصر...', 'e.g. Saudi Arabia, UAE, Kuwait, Egypt...')}
+                    className="form-input w-full"
+                    dir="auto"
+                  />
+                </div>
+              </div>
+
               {/* Phone / WhatsApp with Modern Country Picker & Search */}
               <div>
                 <label className="block text-xs font-bold text-cream mb-2 flex items-center justify-between">
@@ -1076,6 +1231,9 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                               type="button"
                               onClick={() => {
                                 setSelectedCountry(c);
+                                if (!formData.country || formData.country === selectedCountry.name) {
+                                  setFormData((prev) => ({ ...prev, country: c.name }));
+                                }
                                 setShowCountryMenu(false);
                                 setCountrySearch('');
                               }}
@@ -1144,7 +1302,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
             onClick={handleNextQuestion}
             className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold via-amber-500 to-gold text-dark-950 font-extrabold text-base md:text-lg shadow-neon-gold hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
           >
-            {qIndex === 6
+            {qIndex === 8
               ? t('إظهار التوصية والنتيجة ✨', 'Show Recommendation & Result ✨')
               : t('متابعة', 'Continue')
             }
