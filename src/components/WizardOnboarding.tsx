@@ -724,7 +724,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
       <div className="absolute inset-0 digital-grid-bg opacity-15 pointer-events-none" />
 
       {/* Main Question Card Container with Action Button Directly Below Fields */}
-      <div className="relative z-10 max-w-2xl mx-auto w-full my-auto px-2 py-4">
+      <div className="relative z-10 max-w-xl mx-auto w-full my-auto px-4 py-6">
         
         {errorMsg && (
           <div className="mb-6 p-4 rounded-2xl bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs md:text-sm flex items-center gap-2">
@@ -736,16 +736,16 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         {/* QUESTION 0: Goal & Path Selection */}
         {qIndex === 0 && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+            <div className="mb-6">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 leading-tight">
                 {t('ما هو هدفكِ الرئيسي؟ 🎯', 'What is your main goal? 🎯')}
               </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
+              <p className="text-taupe text-xs md:text-sm font-medium leading-relaxed">
                 {t('اختاري المسار الأقرب لهدفكِ الحالي لضبط التغذية والتمارين بناءً عليه.', 'Choose the path closest to your current goal to customize your nutrition and training accordingly.')}
               </p>
             </div>
 
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+            <div className="space-y-3.5 max-h-[420px] overflow-y-auto pr-1">
               {paths.map((p) => {
                 const isSelected = formData.pathId === p.id;
                 const isRecommendedForBody = 
@@ -757,15 +757,15 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     key={p.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, pathId: p.id })}
-                    className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between ${lang === 'ar' ? 'text-right' : 'text-left'} ${
+                    className={`w-full min-h-[76px] px-5 py-4 sm:px-6 sm:py-5 rounded-2xl md:rounded-3xl border-2 transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer text-right ${
                       isSelected
                         ? 'bg-gold/15 border-gold shadow-neon-gold text-white'
-                        : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
+                        : 'bg-dark-900/90 border-white/15 text-taupe hover:border-gold/40 hover:bg-dark-900'
                     }`}
                   >
-                    <div className="flex-1 pr-2">
+                    <div className="flex-1 text-right">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="font-bold text-sm text-white">
+                        <span className="font-extrabold text-base text-white">
                           {lang === 'ar' ? p.title : (p.titleEn || p.subtitle)}
                         </span>
                         {isRecommendedForBody && (
@@ -774,12 +774,16 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-taupe/90 font-medium leading-relaxed">
+                      <div className="text-xs text-taupe/70 font-medium leading-relaxed">
                         {lang === 'en' && p.descriptionEn ? p.descriptionEn : p.description}
                       </div>
                     </div>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 mx-2 ${isSelected ? 'bg-gold border-gold text-dark-950' : 'border-taupe/40'}`}>
-                      {isSelected && <Check size={14} strokeWidth={3} />}
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 shrink-0 transition-all ${
+                      isSelected 
+                        ? 'bg-gold border-gold text-dark-950 shadow-neon-gold scale-105' 
+                        : 'border-white/20 bg-dark-950/60'
+                    }`}>
+                      {isSelected && <Check size={16} strokeWidth={3.5} />}
                     </div>
                   </button>
                 );
@@ -791,16 +795,16 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         {/* QUESTION 1: Training Location */}
         {qIndex === 1 && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+            <div className="mb-6">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 leading-tight">
                 {t('أين تفضلين التمرين؟', 'Where do you prefer to exercise?')}
               </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
+              <p className="text-taupe text-xs md:text-sm font-medium leading-relaxed">
                 {t('المنظومة تدعم جميع الخيارات بنفس الكفاءة والشروحات الكاملة.', 'The program supports all options with equal efficiency and full instructions.')}
               </p>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-4">
               {[
                 { 
                   id: 'gym', 
@@ -833,28 +837,30 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     key={loc.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, trainingLocation: loc.id })}
-                    className={`w-full p-4.5 rounded-2xl border transition-all duration-200 flex items-center justify-between cursor-pointer ${lang === 'ar' ? 'text-right' : 'text-left'} ${
+                    className={`w-full min-h-[76px] px-5 py-4 sm:px-6 sm:py-5 rounded-2xl md:rounded-3xl border-2 transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer text-right ${
                       isSelected
                         ? 'bg-gold/15 border-gold text-white shadow-neon-gold'
-                        : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
+                        : 'bg-dark-900/90 border-white/15 text-taupe hover:border-gold/40 hover:bg-dark-900'
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
-                      isSelected ? 'bg-gold border-gold text-dark-950' : 'border-white/20 bg-dark-950/60'
-                    }`}>
-                      {isSelected && <Check size={14} strokeWidth={3} />}
-                    </div>
-
-                    <div className="flex-1 mx-4">
-                      <div className="flex items-center gap-2">
+                    <div className="flex-1 text-right">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-2xl shrink-0">{loc.icon}</span>
                         <span className="font-extrabold text-base md:text-lg text-white">
                           {lang === 'ar' ? loc.titleAr : loc.titleEn}
                         </span>
-                        <span className="text-xl">{loc.icon}</span>
                       </div>
-                      <div className="text-xs text-taupe/80 font-medium mt-0.5">
+                      <div className="text-xs text-taupe/70 font-medium mt-1 leading-relaxed">
                         {lang === 'ar' ? loc.descAr : loc.descEn}
                       </div>
+                    </div>
+
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 shrink-0 transition-all ${
+                      isSelected 
+                        ? 'bg-gold border-gold text-dark-950 shadow-neon-gold scale-105' 
+                        : 'border-white/20 bg-dark-950/60'
+                    }`}>
+                      {isSelected && <Check size={16} strokeWidth={3.5} />}
                     </div>
                   </button>
                 );
@@ -866,16 +872,16 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         {/* QUESTION 2: Fitness Level */}
         {qIndex === 2 && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+            <div className="mb-6">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 leading-tight">
                 {t('ما هو مستواكِ؟', 'What is your fitness level?')}
               </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
+              <p className="text-taupe text-xs md:text-sm font-medium leading-relaxed">
                 {t('لبناء التدرج الحركي المناسب لمستواكِ وتفادي أي إرهاق أو إصابات.', 'To structure the right movement progression and prevent fatigue.')}
               </p>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-4">
               {[
                 { 
                   id: 'beginner', 
@@ -905,25 +911,27 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     key={lvl.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, fitnessLevel: lvl.id })}
-                    className={`w-full p-4.5 rounded-2xl border transition-all duration-200 flex items-center justify-between cursor-pointer ${lang === 'ar' ? 'text-right' : 'text-left'} ${
+                    className={`w-full min-h-[74px] px-5 py-4 sm:px-6 sm:py-5 rounded-2xl md:rounded-3xl border-2 transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer text-right ${
                       isSelected
                         ? 'bg-gold/15 border-gold text-white shadow-neon-gold'
-                        : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
+                        : 'bg-dark-900/90 border-white/15 text-taupe hover:border-gold/40 hover:bg-dark-900'
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
-                      isSelected ? 'bg-gold border-gold text-dark-950' : 'border-white/20 bg-dark-950/60'
-                    }`}>
-                      {isSelected && <Check size={14} strokeWidth={3} />}
-                    </div>
-
-                    <div className="flex-1 mx-4">
+                    <div className="flex-1 text-right">
                       <div className="font-extrabold text-base md:text-lg text-white">
                         {lang === 'ar' ? lvl.titleAr : lvl.titleEn}
                       </div>
-                      <div className="text-xs text-taupe/80 font-medium mt-0.5">
+                      <div className="text-xs text-taupe/70 font-medium mt-1 leading-relaxed">
                         {lang === 'ar' ? lvl.descAr : lvl.descEn}
                       </div>
+                    </div>
+
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 shrink-0 transition-all ${
+                      isSelected 
+                        ? 'bg-gold border-gold text-dark-950 shadow-neon-gold scale-105' 
+                        : 'border-white/20 bg-dark-950/60'
+                    }`}>
+                      {isSelected && <Check size={16} strokeWidth={3.5} />}
                     </div>
                   </button>
                 );
@@ -935,16 +943,16 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         {/* QUESTION 3: Workout Frequency */}
         {qIndex === 3 && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+            <div className="mb-6">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 leading-tight">
                 {t('كم مرة تستطيعين التمرين أسبوعياً؟', 'How many times can you workout per week?')}
               </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
+              <p className="text-taupe text-xs md:text-sm font-medium leading-relaxed">
                 {t('نصمم جدول التمارين بما يتوافق مع وقتكِ وروتينكِ الأسبوعي.', 'We tailor your training schedule around your available time and routine.')}
               </p>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-4">
               {[
                 { id: '2', titleAr: '2 أيام', titleEn: '2 Days', descAr: 'جدول مرن للمشغولات جداً أو للمحافظة على النشاط', descEn: 'Flexible schedule for busy routines' },
                 { id: '3', titleAr: '3 أيام', titleEn: '3 Days', descAr: 'التوازن المثالي بين النتائج والاستمرارية', descEn: 'Ideal balance between results and consistency' },
@@ -957,25 +965,27 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     key={opt.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, workoutDaysPerWeek: opt.id })}
-                    className={`w-full p-4.5 rounded-2xl border transition-all duration-200 flex items-center justify-between cursor-pointer ${lang === 'ar' ? 'text-right' : 'text-left'} ${
+                    className={`w-full min-h-[70px] px-5 py-4 sm:px-6 sm:py-4.5 rounded-2xl md:rounded-3xl border-2 transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer text-right ${
                       isSelected
                         ? 'bg-gold/15 border-gold text-white shadow-neon-gold'
-                        : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
+                        : 'bg-dark-900/90 border-white/15 text-taupe hover:border-gold/40 hover:bg-dark-900'
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
-                      isSelected ? 'bg-gold border-gold text-dark-950' : 'border-white/20 bg-dark-950/60'
-                    }`}>
-                      {isSelected && <Check size={14} strokeWidth={3} />}
-                    </div>
-
-                    <div className="flex-1 mx-4">
+                    <div className="flex-1 text-right">
                       <div className="font-extrabold text-base md:text-lg text-white">
                         {lang === 'ar' ? opt.titleAr : opt.titleEn}
                       </div>
-                      <div className="text-xs text-taupe/80 font-medium mt-0.5">
+                      <div className="text-xs text-taupe/70 font-medium mt-1 leading-relaxed">
                         {lang === 'ar' ? opt.descAr : opt.descEn}
                       </div>
+                    </div>
+
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 shrink-0 transition-all ${
+                      isSelected 
+                        ? 'bg-gold border-gold text-dark-950 shadow-neon-gold scale-105' 
+                        : 'border-white/20 bg-dark-950/60'
+                    }`}>
+                      {isSelected && <Check size={16} strokeWidth={3.5} />}
                     </div>
                   </button>
                 );
@@ -987,21 +997,21 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         {/* QUESTION 4: Lifestyle & Activity */}
         {qIndex === 4 && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+            <div className="mb-6">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 leading-tight">
                 {t('صفّي طبيعة نشاطكِ ويومكِ اليومي', 'Describe your daily activity level')}
               </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
+              <p className="text-taupe text-xs md:text-sm font-medium leading-relaxed">
                 {t('لحساب معدل الأيض اليومي (TDEE) بدقة.', 'To accurately calculate your Total Daily Energy Expenditure (TDEE).')}
               </p>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {[
-                { id: 'office', labelAr: '💼 عمل مكتبي — جلوس معظم اليوم', labelEn: '💼 Office work — Sitting most of the day' },
-                { id: 'active', labelAr: '🚶‍♀️ حركة كثيرة — وقوف وتنقل مستمر', labelEn: '🚶‍♀️ Very active — Standing and moving constantly' },
-                { id: 'student', labelAr: '📚 دراسة ومشي كثير', labelEn: '📚 Studying with a lot of walking' },
-                { id: 'housewife', labelAr: '🏠 ربة منزل نشطة', labelEn: '🏠 Active homemaker' },
+                { id: 'office', icon: '💼', labelAr: 'عمل مكتبي — جلوس معظم اليوم', labelEn: 'Office work — Sitting most of the day' },
+                { id: 'active', icon: '🚶‍♀️', labelAr: 'حركة كثيرة — وقوف وتنقل مستمر', labelEn: 'Very active — Standing and moving constantly' },
+                { id: 'student', icon: '📚', labelAr: 'دراسة ومشي كثير', labelEn: 'Studying with a lot of walking' },
+                { id: 'housewife', icon: '🏠', labelAr: 'ربة منزل نشطة', labelEn: 'Active homemaker' },
               ].map((opt) => {
                 const isSelected = formData.lifestyle === opt.id;
                 return (
@@ -1009,20 +1019,26 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     key={opt.id}
                     type="button"
                     onClick={() => setFormData({ ...formData, lifestyle: opt.id })}
-                    className={`w-full p-4.5 rounded-2xl border transition-all flex items-center justify-between ${lang === 'ar' ? 'text-right' : 'text-left'} ${
+                    className={`w-full min-h-[68px] px-5 py-4 sm:px-6 sm:py-4.5 rounded-2xl md:rounded-3xl border-2 transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer text-right ${
                       isSelected
                         ? 'bg-gold/15 border-gold text-white shadow-neon-gold'
-                        : 'bg-dark-900/80 border-white/10 text-taupe hover:border-white/30'
+                        : 'bg-dark-900/90 border-white/15 text-taupe hover:border-gold/40 hover:bg-dark-900'
                     }`}
                   >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 transition-colors ${
-                      isSelected ? 'bg-gold border-gold text-dark-950' : 'border-white/20 bg-dark-950/60'
-                    }`}>
-                      {isSelected && <Check size={14} strokeWidth={3} />}
+                    <div className="flex-1 text-right flex items-center gap-3">
+                      <span className="text-2xl shrink-0">{opt.icon}</span>
+                      <span className="font-extrabold text-sm md:text-base text-white">
+                        {lang === 'ar' ? opt.labelAr : opt.labelEn}
+                      </span>
                     </div>
-                    <span className="font-bold text-sm md:text-base text-white flex-1 mx-4">
-                      {lang === 'ar' ? opt.labelAr : opt.labelEn}
-                    </span>
+
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 shrink-0 transition-all ${
+                      isSelected 
+                        ? 'bg-gold border-gold text-dark-950 shadow-neon-gold scale-105' 
+                        : 'border-white/20 bg-dark-950/60'
+                    }`}>
+                      {isSelected && <Check size={16} strokeWidth={3.5} />}
+                    </div>
                   </button>
                 );
               })}
@@ -1033,16 +1049,16 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         {/* QUESTION 5: Health Issues & Medications */}
         {qIndex === 5 && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+            <div className="mb-6">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 leading-tight">
                 {t('الاعتبارات الصحية والأدوية 🩺', 'Health Considerations & Medications 🩺')}
               </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
+              <p className="text-taupe text-xs md:text-sm font-medium leading-relaxed">
                 {t('نراعي أدق التفاصيل لضمان نظام صحي آمن تماماً لصحتكِ.', 'We consider every detail to ensure a 100% safe and therapeutic plan for you.')}
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <label className="block text-xs font-bold text-cream mb-2">
                   {t('هل تعانين من أي مشاكل صحية؟', 'Do you have any health conditions?')}
@@ -1052,7 +1068,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                   value={formData.healthIssues}
                   onChange={(e) => setFormData({ ...formData, healthIssues: e.target.value })}
                   placeholder={t('مثال: تكيسات مبايض، خمول غدة، قولون عصبي... (إذا لا يوجد اكتبي: لا يوجد)', 'e.g., PCOS, hypothyroidism, IBS... (If none, write: None)')}
-                  className="form-input w-full text-sm resize-none"
+                  className="form-input w-full text-sm resize-none p-4"
                   dir="auto"
                 />
               </div>
@@ -1066,7 +1082,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                   value={formData.medications}
                   onChange={(e) => setFormData({ ...formData, medications: e.target.value })}
                   placeholder={t('اذكري اسم الدواء أو اكتبي «لا يوجد»', 'Mention the medication name or write "None"')}
-                  className="form-input w-full text-sm"
+                  className="form-input w-full text-sm p-4"
                   dir="auto"
                 />
               </div>
@@ -1077,17 +1093,17 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         {/* QUESTION 6: Height & Weight with Dual WheelPicker */}
         {qIndex === 6 && (
           <div className="space-y-6">
-            <div className="text-center md:text-right">
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+            <div className="mb-6 text-center md:text-right">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 leading-tight">
                 {t('كم طولكِ ووزنكِ؟', 'What is your height and weight?')}
               </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
+              <p className="text-taupe text-xs md:text-sm font-medium leading-relaxed">
                 {t('هذي المعلومة لحساب مؤشر كتلة الجسم وتخصيص خطتكِ.', 'This information is used to calculate your BMI and personalize your plan.')}
               </p>
             </div>
 
             {/* Dual Smooth WheelPickers (Side-by-side for Height and Weight) */}
-            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+            <div className="grid grid-cols-2 gap-5 max-w-md mx-auto py-1">
               <WheelPicker
                 label={t('الطول', 'Height')}
                 unit={t('سم', 'cm')}
@@ -1109,7 +1125,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
             </div>
 
             {/* Calculated BMI Card (As in Reference Image 4) */}
-            <div className="p-4.5 rounded-2xl bg-dark-900/90 border border-gold/30 text-center space-y-1 shadow-luxury max-w-md mx-auto">
+            <div className="mt-6 p-5 rounded-2xl md:rounded-3xl bg-dark-900/90 border border-gold/30 text-center space-y-1.5 shadow-luxury max-w-md mx-auto">
               <div className="text-xs font-bold text-taupe">{t('مؤشر كتلة الجسم (BMI)', 'Body Mass Index (BMI)')}</div>
               <div className="text-3xl md:text-4xl font-black text-white">{bmiValue}</div>
               <div className={`text-sm font-bold ${bmiColor}`}>{bmiCategory}</div>
@@ -1120,17 +1136,17 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         {/* QUESTION 7: Age with Smooth WheelPicker */}
         {qIndex === 7 && (
           <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+            <div className="mb-6 text-center">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 leading-tight">
                 {t('كم عمرك؟', 'How old are you?')}
               </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
+              <p className="text-taupe text-xs md:text-sm font-medium leading-relaxed">
                 {t('لملاءمة شدة التمارين ومعدلات الاستشفاء والتمثيل الغذائي بدقة.', 'To calibrate workout intensity, recovery rates, and metabolism.')}
               </p>
             </div>
 
             {/* Single Smooth WheelPicker for Age */}
-            <div className="max-w-[240px] mx-auto py-2">
+            <div className="max-w-[240px] mx-auto py-3">
               <WheelPicker
                 unit={t('سنة', 'yrs')}
                 value={formData.age}
@@ -1145,17 +1161,17 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         {/* QUESTION 8: Direct Contact Info & Country */}
         {qIndex === 8 && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+            <div className="mb-6">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 leading-tight">
                 {t('وسائل التواصل ومكان الإقامة 📱', 'Contact Info & Residence 📱')}
               </h2>
-              <p className="text-taupe text-xs md:text-sm font-medium">
+              <p className="text-taupe text-xs md:text-sm font-medium leading-relaxed">
                 {t('أدخلي رقم الواتساب وحساب الإنستجرام لتتواصل معكِ المدربة حنان خالد شخصياً.', 'Enter your WhatsApp and Instagram so Coach Hanan Khalid can contact you personally.')}
               </p>
             </div>
 
             {/* Mini Recap Chips of User Choices */}
-            <div className="p-3 rounded-2xl bg-dark-900/60 border border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-cream">
+            <div className="p-4 rounded-2xl bg-dark-900/80 border border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-cream mb-2">
               <div className="flex items-center gap-1.5 text-gold">
                 <span>🎯 {lang === 'ar' ? selectedPathObj.title : (selectedPathObj.titleEn || selectedPathObj.subtitle)}</span>
               </div>
@@ -1166,7 +1182,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* Country Selection Input / Quick Picker */}
               <div>
                 <label className="block text-xs font-bold text-cream mb-2">
@@ -1178,7 +1194,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     value={formData.country}
                     onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                     placeholder={t('مثال: السعودية، الإمارات، الكويت، مصر...', 'e.g. Saudi Arabia, UAE, Kuwait, Egypt...')}
-                    className="form-input w-full"
+                    className="form-input w-full p-4"
                     dir="auto"
                   />
                 </div>
@@ -1202,7 +1218,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     <button
                       type="button"
                       onClick={() => setShowCountryMenu(!showCountryMenu)}
-                      className="h-12 px-3 rounded-2xl bg-dark-900 border border-white/20 hover:border-gold/50 flex items-center gap-2 text-white font-bold text-sm transition-all"
+                      className="h-13 px-3.5 rounded-2xl bg-dark-900 border border-white/20 hover:border-gold/50 flex items-center gap-2 text-white font-bold text-sm transition-all"
                     >
                       <span className="text-lg">{selectedCountry.flag}</span>
                       <span className="text-xs font-bold text-gold dir-ltr">{selectedCountry.dialCode}</span>
@@ -1264,7 +1280,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="501234567"
-                    className="form-input flex-1 text-base font-bold dir-ltr"
+                    className="form-input flex-1 text-base font-bold dir-ltr p-4"
                   />
                 </div>
 
@@ -1287,7 +1303,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     value={formData.instagram}
                     onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
                     placeholder="username"
-                    className="form-input w-full pr-9"
+                    className="form-input w-full pr-9 p-4"
                     dir="ltr"
                   />
                 </div>
@@ -1296,11 +1312,11 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
         )}
 
-        {/* Action CTA Button: Placed directly below the fields in the same container, responsive to empty space */}
-        <div className="pt-8 pb-4">
+        {/* Action CTA Button: Placed directly below the fields with generous comfortable spacing */}
+        <div className="pt-10 pb-6">
           <button
             onClick={handleNextQuestion}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-gold via-amber-500 to-gold text-dark-950 font-extrabold text-base md:text-lg shadow-neon-gold hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+            className="w-full py-4.5 px-6 rounded-2xl bg-gradient-to-r from-gold via-amber-500 to-gold text-dark-950 font-extrabold text-base md:text-lg shadow-neon-gold hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
           >
             {qIndex === 8
               ? t('إظهار التوصية والنتيجة ✨', 'Show Recommendation & Result ✨')
