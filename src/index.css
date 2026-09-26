@@ -238,6 +238,100 @@
     -webkit-appearance: none;
     margin: 0;
   }
+
+  .wheel-picker {
+    @apply relative w-full overflow-hidden rounded-3xl;
+    height: 280px;
+    background: linear-gradient(180deg, rgba(20, 4, 10, 0.2), rgba(42, 11, 24, 0.32), rgba(20, 4, 10, 0.2));
+    border: 1px solid rgba(239, 208, 213, 0.1);
+  }
+
+  .wheel-picker-compact {
+    height: 252px;
+  }
+
+  .wheel-picker-scroll {
+    @apply h-full overflow-y-auto outline-none;
+    padding-block: 112px;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wheel-picker-compact .wheel-picker-scroll {
+    padding-block: 98px;
+  }
+
+  .wheel-picker-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .wheel-picker-item {
+    @apply relative z-10 flex w-full items-center justify-center gap-1 text-lg font-bold text-taupe/45 transition-all duration-200;
+    height: 56px;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+
+  .wheel-picker-item:hover {
+    color: rgba(255, 250, 248, 0.75);
+  }
+
+  .wheel-picker-item.is-selected {
+    @apply text-2xl font-black text-white;
+    transform: scale(1.04);
+  }
+
+  .wheel-picker-item.is-distant {
+    opacity: 0.3;
+  }
+
+  .wheel-picker-unit {
+    @apply text-xs font-bold text-taupe;
+  }
+
+  .wheel-picker-selection {
+    @apply pointer-events-none absolute inset-x-3 top-1/2 z-0 -translate-y-1/2 rounded-2xl;
+    height: 56px;
+    background: linear-gradient(135deg, rgba(90, 33, 53, 0.72), rgba(63, 20, 37, 0.82));
+    border: 1.5px solid rgba(186, 120, 92, 0.9);
+    box-shadow: 0 0 24px rgba(186, 120, 92, 0.2), inset 0 0 18px rgba(239, 208, 213, 0.05);
+  }
+
+  .wheel-picker-fade {
+    @apply pointer-events-none absolute inset-x-0 z-20 h-20;
+  }
+
+  .wheel-picker-fade-top {
+    @apply top-0;
+    background: linear-gradient(to bottom, rgba(20, 4, 10, 0.98), transparent);
+  }
+
+  .wheel-picker-fade-bottom {
+    @apply bottom-0;
+    background: linear-gradient(to top, rgba(20, 4, 10, 0.98), transparent);
+  }
+
+  @media (max-width: 480px) {
+    .wheel-picker {
+      height: 252px;
+    }
+
+    .wheel-picker-scroll {
+      padding-block: 98px;
+    }
+
+    .wheel-picker-selection {
+      @apply inset-x-2;
+    }
+
+    .wheel-picker-item.is-selected {
+      @apply text-xl;
+    }
+  }
 }
 
 
