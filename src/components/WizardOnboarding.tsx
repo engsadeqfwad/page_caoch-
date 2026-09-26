@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { parsePhoneNumberFromString } from 'libphonenumber-js/mobile';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -21,49 +22,9 @@ import SubscriptionTermsInfo from './SubscriptionTermsInfo';
 import LanguageToggle from './LanguageToggle';
 import WheelPicker from './WheelPicker';
 import { useLang } from '../context/LanguageContext';
+import { phoneCountries, type PhoneCountry } from '../data/phoneCountries';
 
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xljdlwvy';
-
-export interface CountryCode {
-  name: string;
-  nameEn: string;
-  dialCode: string;
-  flag: string;
-}
-
-const countryList: CountryCode[] = [
-  { name: 'السعودية', nameEn: 'Saudi Arabia', dialCode: '+966', flag: '🇸🇦' },
-  { name: 'الإمارات', nameEn: 'UAE', dialCode: '+971', flag: '🇦🇪' },
-  { name: 'الكويت', nameEn: 'Kuwait', dialCode: '+965', flag: '🇰🇼' },
-  { name: 'قطر', nameEn: 'Qatar', dialCode: '+974', flag: '🇶🇦' },
-  { name: 'البحرين', nameEn: 'Bahrain', dialCode: '+973', flag: '🇧🇭' },
-  { name: 'عمان', nameEn: 'Oman', dialCode: '+968', flag: '🇴🇲' },
-  { name: 'مصر', nameEn: 'Egypt', dialCode: '+20', flag: '🇪🇬' },
-  { name: 'الأردن', nameEn: 'Jordan', dialCode: '+962', flag: '🇯🇴' },
-  { name: 'العراق', nameEn: 'Iraq', dialCode: '+964', flag: '🇮🇶' },
-  { name: 'المغرب', nameEn: 'Morocco', dialCode: '+212', flag: '🇲🇦' },
-  { name: 'الجزائر', nameEn: 'Algeria', dialCode: '+213', flag: '🇩🇿' },
-  { name: 'تونس', nameEn: 'Tunisia', dialCode: '+216', flag: '🇹🇳' },
-  { name: 'لبنان', nameEn: 'Lebanon', dialCode: '+961', flag: '🇱🇧' },
-  { name: 'سوريا', nameEn: 'Syria', dialCode: '+963', flag: '🇸🇾' },
-  { name: 'فلسطين', nameEn: 'Palestine', dialCode: '+970', flag: '🇵🇸' },
-  { name: 'اليمن', nameEn: 'Yemen', dialCode: '+967', flag: '🇾🇪' },
-  { name: 'السودان', nameEn: 'Sudan', dialCode: '+249', flag: '🇸🇩' },
-  { name: 'ليبيا', nameEn: 'Libya', dialCode: '+218', flag: '🇱🇾' },
-  { name: 'تركيا', nameEn: 'Turkey', dialCode: '+90', flag: '🇹🇷' },
-  { name: 'موريتانيا', nameEn: 'Mauritania', dialCode: '+222', flag: '🇲🇷' },
-  { name: 'الصومال', nameEn: 'Somalia', dialCode: '+252', flag: '🇸🇴' },
-  { name: 'المملكة المتحدة', nameEn: 'United Kingdom', dialCode: '+44', flag: '🇬🇧' },
-  { name: 'الولايات المتحدة', nameEn: 'United States', dialCode: '+1', flag: '🇺🇸' },
-  { name: 'كندا', nameEn: 'Canada', dialCode: '+1', flag: '🇨🇦' },
-  { name: 'ألمانيا', nameEn: 'Germany', dialCode: '+49', flag: '🇩🇪' },
-  { name: 'فرنسا', nameEn: 'France', dialCode: '+33', flag: '🇫🇷' },
-  { name: 'إسبانيا', nameEn: 'Spain', dialCode: '+34', flag: '🇪🇸' },
-  { name: 'إيطاليا', nameEn: 'Italy', dialCode: '+39', flag: '🇮🇹' },
-  { name: 'السويد', nameEn: 'Sweden', dialCode: '+46', flag: '🇸🇪' },
-  { name: 'النرويج', nameEn: 'Norway', dialCode: '+47', flag: '🇳🇴' },
-  { name: 'ماليزيا', nameEn: 'Malaysia', dialCode: '+60', flag: '🇲🇾' },
-];
 
 interface WizardProps {
   onComplete?: () => void;
@@ -100,16 +61,34 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   const [checkState, setCheckState] = useState([false, false, false, false]);
 
   // Country Code Selection State
-  const [selectedCountry, setSelectedCountry] = useState<CountryCode>(countryList[0]);
+  const [selectedCountry, setSelectedCountry] = useState<PhoneCountry>(phoneCountries[0]);
   const [countrySearch, setCountrySearch] = useState('');
   const [showCountryMenu, setShowCountryMenu] = useState(false);
 
-  const filteredCountries = countryList.filter(
+  const filteredCountries = phoneCountries.filter(
     (c) =>
       c.name.includes(countrySearch) ||
       c.nameEn.toLowerCase().includes(countrySearch.toLowerCase()) ||
-      c.dialCode.includes(countrySearch)
+      c.dialCode.includes(countrySearch) ||
+      c.code.toLowerCase().includes(countrySearch.toLowerCase())
   );
+
+  const parsedPhone = formData.phone.trim()
+    ? parsePhoneNumberFromString(formData.phone, selectedCountry.code)
+    : undefined;
+  const examplePhoneCountry = selectedCountry.exampleNational
+    ? parsePhoneNumberFromString(selectedCountry.exampleNational, selectedCountry.code)?.country
+    : selectedCountry.code;
+  const isPhoneValid = Boolean(
+    parsedPhone?.isValid() &&
+    (parsedPhone.country === selectedCountry.code || parsedPhone.country === examplePhoneCountry)
+  );
+  const phonePreview = isPhoneValid && parsedPhone
+    ? parsedPhone.formatInternational()
+    : selectedCountry.exampleInternational;
+  const phoneDigitCount = formData.phone.replace(/\D/g, '').length;
+  const exampleDigitCount = selectedCountry.exampleNational.replace(/\D/g, '').length;
+  const showPhoneError = phoneDigitCount >= exampleDigitCount && !isPhoneValid;
 
   // Handle BMI Calculation & Physical Need Breakdown
   const heightM = formData.height / 100;
@@ -223,12 +202,15 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         setErrorMsg(t('يرجى إدخال دولة الإقامة قبل المتابعة', 'Please enter your country of residence before continuing'));
         return;
       }
-      if (formData.phone.replace(/\D/g, '').length < 8) {
-        setErrorMsg(t('يرجى إدخال رقم الواتساب بشكل صحيح لكي نستطيع التواصل معكِ', 'Please enter a valid WhatsApp number so we can contact you'));
+      if (!isPhoneValid) {
+        setErrorMsg(t(
+          `يرجى إدخال رقم صحيح لدولة ${selectedCountry.name}، مثال: ${selectedCountry.exampleNational}`,
+          `Please enter a valid ${selectedCountry.nameEn} number, for example: ${selectedCountry.exampleNational}`
+        ));
         return;
       }
-      if (!formData.instagram.trim()) {
-        setErrorMsg(t('يرجى إدخال حساب الإنستجرام الخاص بكِ', 'Please enter your Instagram username'));
+      if (!/^[A-Za-z0-9._]+$/.test(formData.instagram)) {
+        setErrorMsg(t('يرجى إدخال يوزر إنستجرام صحيح بالأحرف الإنجليزية', 'Please enter a valid Instagram username using English characters'));
         return;
       }
       setStep('calculating');
@@ -259,8 +241,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
           باقة_الاشتراك: `${chosenTier.name} — ${chosenTier.priceSAR} ريال / ${chosenTier.duration}`,
-          رقم_الواتساب: `${selectedCountry.dialCode} ${formData.phone.trim()}`,
-          يوزر_الانستجرام: `@${formData.instagram.replace('@', '')}`,
+          رقم_الواتساب: parsedPhone?.number || `${selectedCountry.dialCode} ${formData.phone.trim()}`,
+          يوزر_الانستجرام: `@${formData.instagram}`,
           العمر: formData.age,
           الدولة: formData.country,
           الطول_سم: formData.height,
@@ -655,7 +637,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                 `وصلتنا كافة بياناتكِ بنجاح. سيتم التواصل معكِ شخصياً خلال 24 ساعة عبر الواتساب (`,
                 `All your data has been received successfully. You will be personally contacted within 24 hours via WhatsApp (`
               )}
-              <span className="text-gold dir-ltr inline-block">{formData.phone}</span>
+              <span className="text-gold dir-ltr inline-block">{phonePreview}</span>
               {t(
                 `) او الأنستجرام بواسطة المدربة `,
                 `) or Instagram by Coach `
@@ -1093,8 +1075,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                   placeholder={t('مثال: السعودية، الإمارات، الكويت...', 'e.g., Saudi Arabia, UAE, Kuwait...')}
-                  className="form-input w-full"
-                  dir="auto"
+                  className={`form-input w-full ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                  dir={dir}
                   autoComplete="country-name"
                 />
               </div>
@@ -1142,15 +1124,17 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                         <div className="overflow-y-auto space-y-1 max-h-48 pr-1">
                           {filteredCountries.map((c) => (
                             <button
-                              key={c.name + c.dialCode}
+                              key={c.code}
                               type="button"
                               onClick={() => {
                                 setSelectedCountry(c);
+                                setFormData((current) => ({ ...current, phone: '' }));
                                 setShowCountryMenu(false);
                                 setCountrySearch('');
+                                setErrorMsg('');
                               }}
                               className={`w-full text-right px-3 py-2 text-xs font-semibold rounded-xl flex items-center justify-between transition-colors ${
-                                selectedCountry.name === c.name ? 'bg-gold/20 text-gold' : 'hover:bg-white/10 text-white'
+                                selectedCountry.code === c.code ? 'bg-gold/20 text-gold' : 'hover:bg-white/10 text-white'
                               }`}
                             >
                               <span className="flex items-center gap-2">
@@ -1175,17 +1159,32 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/[^0-9\s-]/g, '') })}
-                    placeholder="501234567"
-                    className="form-input flex-1 text-base font-bold dir-ltr"
+                    placeholder={selectedCountry.exampleNational}
+                    className={`form-input flex-1 min-w-0 text-base font-bold dir-ltr ${showPhoneError ? 'border-rose-500/60' : ''}`}
                     inputMode="tel"
                     autoComplete="tel"
                   />
                 </div>
 
-                <span className="text-[11px] text-taupe/70 mt-1.5 block">
-                  {t('سيتم التواصل الفوري عبر الواتساب على الرقم المفعل كـ: ', 'You will be contacted on WhatsApp as: ')}
-                  <span className="text-gold font-bold dir-ltr inline-block">{selectedCountry.dialCode} {formData.phone || '50xxxxxxx'}</span>
-                </span>
+                <div className="mt-1.5 text-[11px] font-medium">
+                  {showPhoneError ? (
+                    <span className="text-rose-300">
+                      {t(`أدخلي رقماً محلياً صحيحاً، مثال: ${selectedCountry.exampleNational}`, `Enter a valid local number, for example: ${selectedCountry.exampleNational}`)}
+                    </span>
+                  ) : isPhoneValid ? (
+                    <span className="text-taupe/70">
+                      {t('سيتم التواصل الفوري عبر الواتساب على الرقم المفعل كـ: ', 'You will be contacted on WhatsApp as: ')}
+                      <span className="text-gold font-bold dir-ltr inline-block">{phonePreview}</span>
+                    </span>
+                  ) : (
+                    <span className="text-taupe/70">
+                      {t('اكتبي الرقم المحلي مثل: ', 'Enter the local number like: ')}
+                      <span className="text-cream font-bold dir-ltr inline-block">{selectedCountry.exampleNational}</span>
+                      <span>{t(' — وسيظهر دولياً كـ: ', ' — it will appear internationally as: ')}</span>
+                      <span className="text-gold font-bold dir-ltr inline-block">{selectedCountry.exampleInternational}</span>
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Instagram */}
@@ -1199,13 +1198,22 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                   <input
                     type="text"
                     value={formData.instagram}
-                    onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                    onChange={(e) => {
+                      const instagram = e.target.value
+                        .replace(/^@+/, '')
+                        .replace(/[^A-Za-z0-9._]/g, '')
+                        .slice(0, 30);
+                      setFormData({ ...formData, instagram });
+                    }}
                     placeholder="username"
                     className="form-input w-full pr-9"
                     dir="ltr"
                     autoComplete="off"
                   />
                 </div>
+                <span className="text-[11px] text-taupe/70 mt-1.5 block">
+                  {t('يُسمح بالحروف الإنجليزية والأرقام والنقطة والشرطة السفلية فقط.', 'Only English letters, numbers, periods, and underscores are allowed.')}
+                </span>
               </div>
             </div>
           </div>
