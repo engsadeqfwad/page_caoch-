@@ -24,7 +24,8 @@ import WheelPicker from './WheelPicker';
 import { useLang } from '../context/LanguageContext';
 import { phoneCountries, type PhoneCountry } from '../data/phoneCountries';
 
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xljdlwvy';
+const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
+const WEB3FORMS_ACCESS_KEY = '94a302b6-d8a5-45a6-898a-dd02051b3cd4';
 
 interface WizardProps {
   onComplete?: () => void;
@@ -228,7 +229,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     }
   };
 
-  // Submit to Formspree
+  // Submit to Web3Forms
   const submitRegistration = async (planId: string) => {
     setLoadingSubmit(true);
     setErrorMsg('');
@@ -236,10 +237,14 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     const chosenPath = paths.find((p) => p.id === formData.pathId)?.title || formData.pathId;
 
     try {
-      const res = await fetch(FORMSPREE_ENDPOINT, {
+      const res = await fetch(WEB3FORMS_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
+          access_key: WEB3FORMS_ACCESS_KEY,
+          subject: `طلب اشتراك جديد — ${chosenTier.name}`,
+          from_name: 'موقع المدربة حنان خالد',
+          botcheck: '',
           باقة_الاشتراك: `${chosenTier.name} — ${chosenTier.priceSAR} ريال / ${chosenTier.duration}`,
           رقم_الواتساب: parsedPhone?.number || `${selectedCountry.dialCode} ${formData.phone.trim()}`,
           يوزر_الانستجرام: `@${formData.instagram}`,
@@ -276,13 +281,18 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         }),
       });
 
-      if (res.ok) {
+      const result = await res.json().catch(() => null) as { success?: boolean; message?: string } | null;
+
+      if (res.ok && result?.success !== false) {
         setFormData({ ...formData, selectedPlanId: planId });
         setStep('success');
         window.scrollTo(0, 0);
         if (onComplete) onComplete();
       } else {
-        setErrorMsg(t('حدث خطأ أثناء إرسال البيانات. يرجى المحاولة مرة أخرى.', 'An error occurred while submitting. Please try again.'));
+        setErrorMsg(t(
+          'تعذر إرسال بياناتكِ حالياً. يرجى المحاولة مرة أخرى بعد قليل.',
+          'Your information could not be submitted right now. Please try again shortly.'
+        ));
       }
     } catch {
       setErrorMsg(t('تعذر الاتصال بالسيرفر. يرجى التحقق من اتصال الإنترنت.', 'Could not connect to the server. Please check your internet connection.'));
