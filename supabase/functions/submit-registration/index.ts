@@ -74,6 +74,61 @@ function formatLifestyle(value: string) {
   return labels[value] ?? value;
 }
 
+function getBmiAnalysis(bmi: number) {
+  if (bmi < 18.5) {
+    return {
+      category: 'نقص في الوزن (يحتاج زيادة امتلاء أنثوي)',
+      physicalNeed: 'weight-gain',
+    };
+  }
+  if (bmi <= 21) {
+    return {
+      category: 'متوسط (يحتاج زيادة وزن قليلة وامتلاء أنثوي)',
+      physicalNeed: 'moderate-gain',
+    };
+  }
+  if (bmi < 25) {
+    return { category: 'وزن طبيعي ومثالي', physicalNeed: 'ideal' };
+  }
+  if (bmi < 30) {
+    return {
+      category: 'زيادة بسيطة في الوزن (يحتاج نحت وتنحيف)',
+      physicalNeed: 'fat-loss',
+    };
+  }
+  return {
+    category: 'زيادة ملحوظة / سمنة (يحتاج خفض دهون ونحت)',
+    physicalNeed: 'high-fat-loss',
+  };
+}
+
+function getPathCompatibility(physicalNeed: string, pathId: string) {
+  const needsWeightGain = physicalNeed === 'weight-gain' || physicalNeed === 'moderate-gain';
+  const needsFatLoss = physicalNeed === 'fat-loss' || physicalNeed === 'high-fat-loss';
+
+  if ((needsWeightGain && pathId === 'fat-loss') || (needsFatLoss && pathId === 'weight-gain')) {
+    return '⚠️ المسار المختار لا يتناسب مع كتلة الجسم وتلزم المراجعة';
+  }
+  return '✅ متوافق تماماً مع كتلة الجسم';
+}
+
+function escapeHtml(value: string | number) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function emailField(label: string, value: string | number) {
+  return `
+    <div style="padding:16px 0;border-bottom:1px solid #2f2f35;">
+      <div style="color:#b9a7ff;font-size:13px;font-weight:700;margin-bottom:7px;">${escapeHtml(label)}</div>
+      <div style="color:#f8f7fb;font-size:16px;line-height:1.8;white-space:pre-wrap;">${escapeHtml(value)}</div>
+    </div>`;
+}
+
 Deno.serve(async (request) => {
   const configuredOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
     .split(',')
@@ -202,6 +257,17 @@ Deno.serve(async (request) => {
 
   const bmi = Number((weight / ((height / 100) ** 2)).toFixed(1));
   const submittedAt = new Date().toISOString();
+  const submittedAtDisplay = new Intl.DateTimeFormat('ar-EG', {
+    timeZone: 'Asia/Riyadh',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(new Date(submittedAt));
+  const bmiAnalysis = getBmiAnalysis(bmi);
+  const pathCompatibility = getPathCompatibility(bmiAnalysis.physicalNeed, pathId);
   const completeFormData = {
     age,
     country,
@@ -212,6 +278,9 @@ Deno.serve(async (request) => {
     heightCm: height,
     weightKg: weight,
     bmi,
+    bmiCategory: bmiAnalysis.category,
+    physicalNeed: bmiAnalysis.physicalNeed,
+    pathCompatibility,
     pathId,
     pathName,
     trainingLocation,
@@ -231,6 +300,7 @@ Deno.serve(async (request) => {
     },
     language,
     submittedAt,
+    submittedAtDisplay,
   };
 
   const { data: registration, error: insertError } = await supabase
@@ -257,7 +327,7 @@ Deno.serve(async (request) => {
     'طلب اشتراك جديد — موقع المدربة حنان خالد',
     '',
     `رقم الطلب: ${registration.id}`,
-    `وقت الطلب: ${submittedAt}`,
+    `وقت الطلب الفعلي: ${submittedAtDisplay}`,
     `الباقة: ${planName} — ${planPrice} ريال / ${planDuration}`,
     `رقم الواتساب: ${phone}`,
     `يوزر الإنستجرام: @${instagram}`,
@@ -266,7 +336,8 @@ Deno.serve(async (request) => {
     `العمر: ${age}`,
     `الطول: ${height} سم`,
     `الوزن: ${weight} كغ`,
-    `مؤشر BMI: ${bmi}`,
+    `مؤشر BMI: ${bmi} (${bmiAnalysis.category})`,
+    `توافق المسار مع البدن: ${pathCompatibility}`,
     `المسار: ${pathName}`,
     `مكان التدريب: ${formatLocation(trainingLocation)}`,
     `مستوى المتدربة: ${formatLevel(experienceLevel)}`,
@@ -276,6 +347,42 @@ Deno.serve(async (request) => {
     `الأدوية: ${medications}`,
     `لغة النموذج: ${language === 'ar' ? 'العربية' : 'الإنجليزية'}`,
   ].join('\n');
+
+  const emailHtml = `<!doctype html>
+  <html lang="ar" dir="rtl">
+    <body style="margin:0;padding:0;background:#0e0e11;color:#f8f7fb;font-family:Tahoma,Arial,sans-serif;">
+      <div style="width:100%;background:#0e0e11;padding:24px 12px;box-sizing:border-box;">
+        <div style="max-width:640px;margin:0 auto;background:#17171b;border:1px solid #303038;border-radius:18px;overflow:hidden;">
+          <div style="padding:24px;background:linear-gradient(135deg,#241d35,#17171b);border-bottom:1px solid #3b334b;">
+            <div style="color:#d8c8ff;font-size:13px;font-weight:700;margin-bottom:8px;">موقع المدربة حنان خالد</div>
+            <h1 style="margin:0;color:#ffffff;font-size:24px;line-height:1.5;">طلب اشتراك جديد</h1>
+            <div style="margin-top:10px;color:#aaa5b4;font-size:13px;direction:ltr;text-align:right;">#${escapeHtml(registration.id)}</div>
+          </div>
+          <div style="padding:8px 24px 24px;">
+            ${emailField('باقة الاشتراك', `${planName} — ${planPrice} ريال / ${planDuration}`)}
+            ${emailField('رقم الواتساب', phone)}
+            ${emailField('يوزر الانستجرام', `@${instagram}`)}
+            ${emailField('العمر', age)}
+            ${emailField('الدولة', country)}
+            ${emailField('دولة ورمز الهاتف', `${phoneCountryName} (${phoneCountryCode})`)}
+            ${emailField('الطول سم', height)}
+            ${emailField('الوزن كغ', weight)}
+            ${emailField('مؤشر BMI', `${bmi} (${bmiAnalysis.category})`)}
+            ${emailField('توافق المسار مع البدن', pathCompatibility)}
+            ${emailField('المسار المختار', pathName)}
+            ${emailField('مكان التدريب', formatLocation(trainingLocation))}
+            ${emailField('مستوى المتدربة', formatLevel(experienceLevel))}
+            ${emailField('أيام التدريب أسبوعياً', `${trainingDays} أيام`)}
+            ${emailField('المشاكل الصحية', healthIssues)}
+            ${emailField('الأدوية', medications)}
+            ${emailField('نمط الحياة', formatLifestyle(lifestyle))}
+            ${emailField('اللغة المستخدمة', language === 'ar' ? 'العربية' : 'الإنجليزية')}
+            ${emailField('وقت الطلب الفعلي', submittedAtDisplay)}
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>`;
 
   const emailResponse = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -288,6 +395,7 @@ Deno.serve(async (request) => {
       to: [notificationEmail],
       subject: `طلب اشتراك جديد #${registration.id.slice(0, 8)} — ${planName}`,
       text: emailText,
+      html: emailHtml,
       reply_to: notificationEmail,
     }),
   });
