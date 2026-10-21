@@ -24,8 +24,8 @@ import WheelPicker from './WheelPicker';
 import { useLang } from '../context/LanguageContext';
 import { phoneCountries, type PhoneCountry } from '../data/phoneCountries';
 
-const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
-const WEB3FORMS_ACCESS_KEY = '94a302b6-d8a5-45a6-898a-dd02051b3cd4';
+const SECURE_REGISTRATION_ENDPOINT = import.meta.env.VITE_REGISTRATION_ENDPOINT?.trim()
+  || 'https://jajwrjblsbdfbhbrfyku.supabase.co/functions/v1/submit-registration';
 
 interface WizardProps {
   onComplete?: () => void;
@@ -229,61 +229,51 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     }
   };
 
-  // Submit to Web3Forms
+  // Submit securely through the Supabase Edge Function.
   const submitRegistration = async (planId: string) => {
     setLoadingSubmit(true);
     setErrorMsg('');
     const chosenTier = pricingTiers.find((t) => t.id === planId) || pricingTiers[0];
     const chosenPath = paths.find((p) => p.id === formData.pathId)?.title || formData.pathId;
+    const normalizedPhone = parsedPhone?.number || `${selectedCountry.dialCode}${formData.phone.replace(/\D/g, '')}`;
+
+    const secureRegistrationPayload = {
+      age: formData.age,
+      country: formData.country,
+      phoneCountryCode: selectedCountry.code,
+      phoneCountryName: selectedCountry.name,
+      phone: normalizedPhone,
+      instagram: formData.instagram,
+      height: formData.height,
+      weight: formData.weight,
+      pathId: formData.pathId,
+      pathName: chosenPath,
+      trainingLocation: formData.trainingLocation,
+      experienceLevel: formData.experienceLevel,
+      trainingDays: formData.trainingDays,
+      lifestyle: formData.lifestyle,
+      healthIssues: formData.healthIssues,
+      medications: formData.medications,
+      selectedPlan: {
+        id: chosenTier.id,
+        name: chosenTier.name,
+        priceSAR: chosenTier.priceSAR,
+        duration: chosenTier.duration,
+      },
+      language: lang,
+      website: '',
+    };
 
     try {
-      const res = await fetch(WEB3FORMS_ENDPOINT, {
+      const res = await fetch(SECURE_REGISTRATION_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          access_key: WEB3FORMS_ACCESS_KEY,
-          subject: `طلب اشتراك جديد — ${chosenTier.name}`,
-          from_name: 'موقع المدربة حنان خالد',
-          botcheck: '',
-          باقة_الاشتراك: `${chosenTier.name} — ${chosenTier.priceSAR} ريال / ${chosenTier.duration}`,
-          رقم_الواتساب: parsedPhone?.number || `${selectedCountry.dialCode} ${formData.phone.trim()}`,
-          يوزر_الانستجرام: `@${formData.instagram}`,
-          العمر: formData.age,
-          الدولة: formData.country,
-          الطول_سم: formData.height,
-          الوزن_كغ: formData.weight,
-          مؤشر_BMI: `${bmiValue} (${bmiCategory})`,
-          توافق_المسار_مع_البدن: isMisaligned ? '⚠️ تحذير: المسار المختار لا يتناسب مع كتلة الجسم وتلزم المراجعة' : '✅ متوافق تماماً مع كتلة الجسم',
-          المسار_المختار: chosenPath,
-          مكان_التدريب: formData.trainingLocation === 'home'
-            ? '🏠 المنزل (Home)'
-            : formData.trainingLocation === 'gym'
-              ? '🏋️‍♀️ الجيم (Gym)'
-              : '🔄 المنزل والجيم معاً (Home & Gym)',
-          مستوى_المتدربة: formData.experienceLevel === 'beginner'
-            ? 'مبتدئة (Beginner)'
-            : formData.experienceLevel === 'intermediate'
-              ? 'متوسطة (Intermediate)'
-              : 'متقدمة (Advanced)',
-          أيام_التدريب_أسبوعياً: `${formData.trainingDays} أيام`,
-          المشاكل_الصحية: formData.healthIssues,
-          الأدوية: formData.medications,
-          نمط_الحياة: formData.lifestyle,
-          اللغة_المستخدمة: lang === 'ar' ? 'العربية' : 'الإنجليزية',
-          وقت_الطلب_الفعلي: new Date().toLocaleString('ar-EG', {
-            year: 'numeric',
-            month: 'numeric',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-          }),
-        }),
+        body: JSON.stringify(secureRegistrationPayload),
       });
 
       const result = await res.json().catch(() => null) as { success?: boolean; message?: string } | null;
 
-      if (res.ok && result?.success !== false) {
+      if (res.ok && result?.success === true) {
         setFormData({ ...formData, selectedPlanId: planId });
         setStep('success');
         window.scrollTo(0, 0);
