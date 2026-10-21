@@ -286,7 +286,7 @@ Deno.serve(async (request) => {
     body: JSON.stringify({
       from: fromEmail,
       to: [notificationEmail],
-      subject: `طلب اشتراك جديد — ${planName}`,
+      subject: `طلب اشتراك جديد #${registration.id.slice(0, 8)} — ${planName}`,
       text: emailText,
       reply_to: notificationEmail,
     }),
