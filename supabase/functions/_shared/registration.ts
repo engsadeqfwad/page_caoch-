@@ -59,9 +59,9 @@ export function validateRegistration(input: unknown) {
   const pathId = boundedText(input.pathId, 50);
   const selectedPlan = isRecord(input.selectedPlan) ? input.selectedPlan : {};
   const planId = boundedText(selectedPlan.id, 50);
-  const pathName = Object.hasOwn(REGISTRATION_PATHS, pathId)
+  const pathName = Object.prototype.hasOwnProperty.call(REGISTRATION_PATHS, pathId)
     ? REGISTRATION_PATHS[pathId as keyof typeof REGISTRATION_PATHS] : null;
-  const plan = Object.hasOwn(REGISTRATION_PLANS, planId)
+  const plan = Object.prototype.hasOwnProperty.call(REGISTRATION_PLANS, planId)
     ? REGISTRATION_PLANS[planId as keyof typeof REGISTRATION_PLANS] : null;
   const trainingLocation = boundedText(input.trainingLocation, 20);
   const experienceLevel = boundedText(input.experienceLevel, 20);

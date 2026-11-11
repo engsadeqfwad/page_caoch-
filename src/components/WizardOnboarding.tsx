@@ -25,7 +25,7 @@ import { useLang } from '../context/language';
 import { phoneCountries, type PhoneCountry } from '../data/phoneCountries';
 import WizardTopBar from './WizardTopBar';
 import { REGISTRATION_LIMITS, REGISTRATION_PLANS, UUID_PATTERN, getBmiAnalysis, validateRegistration } from '../../supabase/functions/_shared/registration';
-import { clearSubmissionAttempt, normalizePhoneInput, registrationStorage, submissionIdFor } from '../lib/registration';
+import { clearSubmissionAttempt, normalizePhoneInput, registrationStorage, sendRegistrationRequest, submissionIdFor } from '../lib/registration';
 
 const SECURE_REGISTRATION_ENDPOINT = import.meta.env.VITE_REGISTRATION_ENDPOINT?.trim()
   || 'https://jajwrjblsbdfbhbrfyku.supabase.co/functions/v1/submit-registration';
@@ -37,7 +37,7 @@ interface WizardProps {
 export default function WizardOnboarding({ onComplete }: WizardProps) {
   const { lang, t, dir } = useLang();
   const { planId: routePlanId } = useParams();
-  const initialPlanId = routePlanId && Object.hasOwn(REGISTRATION_PLANS, routePlanId) ? routePlanId : 'plus';
+  const initialPlanId = routePlanId && Object.prototype.hasOwnProperty.call(REGISTRATION_PLANS, routePlanId) ? routePlanId : 'plus';
   const submitting = useRef(false);
   const attempt = useRef<{ payload: string; id: string } | null>(null);
   const [registrationId, setRegistrationId] = useState('');
@@ -203,6 +203,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
       selectedPlan: { id: chosenTier.id, name: chosenTier.name, priceSAR: chosenTier.priceSAR, duration: chosenTier.duration },
       language: lang, website: formData.website,
     };
+    let requestStarted = false;
     try {
       if (!isPhoneValid || !validateRegistration(payload).ok) {
         setErrorMsg(t('يرجى مراجعة الإجابات ووسائل التواصل قبل اعتماد الطلب.', 'Please review your answers and contact details before confirming.'));
@@ -213,12 +214,9 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
       if (attempt.current?.payload !== serialized) {
         attempt.current = { payload: serialized, id: await submissionIdFor(payload, storage) };
       }
-      const res = await fetch(SECURE_REGISTRATION_ENDPOINT, {
-        method: 'POST', signal: AbortSignal.timeout(30_000),
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ ...payload, submissionId: attempt.current.id }),
-      });
-      const result = await res.json().catch(() => null) as { success?: boolean; registrationId?: string; code?: string } | null;
+      requestStarted = true;
+      const { response: res, result } = await sendRegistrationRequest(SECURE_REGISTRATION_ENDPOINT,
+        { ...payload, submissionId: attempt.current.id });
       if (res.ok && result?.success === true && typeof result.registrationId === 'string' && UUID_PATTERN.test(result.registrationId)) {
         setRegistrationId(result.registrationId);
         setFormData((current) => ({ ...current, selectedPlanId: planId }));
@@ -237,8 +235,14 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
       } else {
         setErrorMsg(t('تعذر تأكيد حفظ طلبكِ حالياً. يمكنكِ إعادة المحاولة بنفس البيانات.', 'We could not confirm your registration yet. You can retry with the same details.'));
       }
-    } catch {
-      setErrorMsg(t('لم نتمكن من تأكيد النتيجة بسبب الاتصال. تحققي من الإنترنت وأعيدي المحاولة بنفس البيانات.', 'We could not confirm the result because of a connection issue. Check your connection and retry with the same details.'));
+    } catch (error) {
+      if (!requestStarted) {
+        setErrorMsg(t('تعذر تجهيز الطلب على هذا المتصفح. حدّثي الصفحة ثم أعيدي المحاولة.', 'We could not prepare the request in this browser. Refresh the page and try again.'));
+      } else if (error instanceof Error && error.name === 'TimeoutError') {
+        setErrorMsg(t('انتهت مهلة انتظار تأكيد حفظ الطلب. أعيدي المحاولة بنفس البيانات لتأكيد النتيجة.', 'The confirmation timed out. Retry with the same details to confirm the result.'));
+      } else {
+        setErrorMsg(t('تعذر الاتصال بخدمة التسجيل لتأكيد النتيجة. أعيدي المحاولة بنفس البيانات.', 'We could not reach the registration service to confirm the result. Retry with the same details.'));
+      }
     } finally {
       submitting.current = false;
       setLoadingSubmit(false);
