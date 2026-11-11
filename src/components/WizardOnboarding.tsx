@@ -550,7 +550,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
         )}
 
-        <div className="absolute -left-[10000px] w-px h-px overflow-hidden" aria-hidden="true">
+        {/* Keep the bot-only field out of layout: off-screen positioning expands RTL mobile scroll bounds. */}
+        <div hidden aria-hidden="true">
           <label htmlFor="registration-website">Website</label>
           <input id="registration-website" name="website" type="text" tabIndex={-1} autoComplete="off"
             value={formData.website} onChange={(event) => setFormData((current) => ({ ...current, website: event.target.value }))} />
