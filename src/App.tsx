@@ -13,7 +13,7 @@ import FAQ from './components/FAQ';
 import FinalCTA from './components/FinalCTA';
 import Footer from './components/Footer';
 import WizardOnboarding from './components/WizardOnboarding';
-import { useLang } from './context/LanguageContext';
+import { useLang } from './context/language';
 
 // 1. Standalone Dedicated Questionnaire Assessment Page (First Entry / Entry Point)
 function AssessmentPage() {

@@ -1,5 +1,5 @@
 import { CheckCircle2, ShieldCheck, Heart, Clock, Sparkles, AlertTriangle, FileText, Phone, Dumbbell, Utensils } from 'lucide-react';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 export default function SubscriptionTermsInfo() {
   const { t, dir, lang } = useLang();

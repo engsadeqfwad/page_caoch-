@@ -1,11 +1,10 @@
+import { CONTACT_EMAIL } from '../config/contact';
 import { Mail } from 'lucide-react';
 import logoImg from '../assets/logo.png';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 const socialLinks = [
-  { label: 'Instagram', icon: '📸', href: '#' },
-  { label: 'TikTok', icon: '🎵', href: '#' },
-  { label: 'Email', icon: <Mail size={18} className="text-gold" />, href: 'mailto:hanankhalid7750@gmail.com', isMail: true },
+  { label: 'Email', icon: <Mail size={18} className="text-gold" />, href: 'mailto:' + CONTACT_EMAIL, isMail: true },
 ];
 
 export default function Footer() {
@@ -96,7 +95,7 @@ export default function Footer() {
             </h4>
             <div className="space-y-3">
               <a
-                href="mailto:hanankhalid7750@gmail.com"
+                href={'mailto:' + CONTACT_EMAIL}
                 className="inline-flex items-center gap-2 text-sm text-taupe hover:text-white transition-colors duration-200 font-medium"
                 title={t('تواصل عبر البريد الإلكتروني', 'Contact via Email')}
               >

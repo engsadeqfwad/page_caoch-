@@ -1,47 +1,18 @@
-import React, { createContext, useContext, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { LanguageContext, type Lang } from './language';
 
-export type Lang = 'ar' | 'en';
-
-interface LanguageContextType {
-  lang: Lang;
-  setLang: (l: Lang) => void;
-  t: <T>(ar: T, en: T) => T;
-  dir: 'rtl' | 'ltr';
-}
-
-const LanguageContext = createContext<LanguageContextType>({
-  lang: 'ar',
-  setLang: () => {},
-  t: (ar) => ar,
-  dir: 'rtl',
-});
-
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
+export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
-    try { return (localStorage.getItem('lang') as Lang) || 'ar'; } catch { return 'ar'; }
+    try { return localStorage.getItem('lang') === 'en' ? 'en' : 'ar'; } catch { return 'ar'; }
   });
-
-  const setLang = (l: Lang) => {
-    setLangState(l);
-    try { localStorage.setItem('lang', l); } catch {}
-    document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = l;
+  const setLang = (value: Lang) => {
+    setLangState(value);
+    try { localStorage.setItem('lang', value); } catch { /* Storage may be disabled. */ }
   };
-
-  // Set initial dir
-  React.useEffect(() => {
+  useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
-  }, []);
-
-  const t = <T,>(ar: T, en: T): T => (lang === 'ar' ? ar : en);
-  const dir: 'rtl' | 'ltr' = lang === 'ar' ? 'rtl' : 'ltr';
-
-  return (
-    <LanguageContext.Provider value={{ lang, setLang, t, dir }}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  }, [lang]);
+  const t = <T,>(ar: T, en: T): T => lang === 'ar' ? ar : en;
+  return <LanguageContext.Provider value={{ lang, setLang, t, dir: lang === 'ar' ? 'rtl' : 'ltr' }}>{children}</LanguageContext.Provider>;
 }
-
-export const useLang = () => useContext(LanguageContext);

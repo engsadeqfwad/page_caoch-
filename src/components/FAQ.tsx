@@ -1,7 +1,8 @@
+import { CONTACT_EMAIL } from '../config/contact';
 import { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { faqItems } from '../data';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 export default function FAQ() {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -86,7 +87,7 @@ export default function FAQ() {
           </p>
           <button
             className="btn-secondary text-sm"
-            onClick={() => { window.open('mailto:hello@femina-wellness.com', '_blank'); }}
+            onClick={() => { window.open('mailto:' + CONTACT_EMAIL, '_blank'); }}
           >
             {t('تواصلي مباشرة معنا', 'Contact Us Directly')}
           </button>

@@ -1,3 +1,9 @@
 [functions.submit-registration]
 verify_jwt = false
 
+[functions.retry-registration-emails]
+verify_jwt = false
+
+[functions.resend-webhook]
+verify_jwt = false
+

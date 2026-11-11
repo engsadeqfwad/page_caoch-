@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { paths } from '../data';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 const pathColors: Record<string, { gradient: string; accent: string; badgeBg: string }> = {
   'feminine-shape': { gradient: 'linear-gradient(135deg, #BA785C 0%, #5A2135 100%)', accent: '#EFD0D5', badgeBg: 'rgba(186,120,92,0.25)' },

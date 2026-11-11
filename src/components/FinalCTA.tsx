@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight, Sparkles, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 export default function FinalCTA() {
   const navigate = useNavigate();

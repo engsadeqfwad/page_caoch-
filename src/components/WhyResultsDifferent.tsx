@@ -1,5 +1,5 @@
 import { Sparkles, HelpCircle, CheckCircle2 } from 'lucide-react';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 export default function WhyResultsDifferent() {
   const { lang, t, dir } = useLang();

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { pricingTiers } from '../data';
 import { Check, Sparkles } from 'lucide-react';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 export default function PricingSection() {
   const navigate = useNavigate();

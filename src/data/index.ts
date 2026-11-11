@@ -1,10 +1,11 @@
+import { REGISTRATION_PATHS, REGISTRATION_PLANS } from '../../supabase/functions/_shared/registration';
 import type { Path, NutritionCard, FeatureItem, PricingTier, FAQItem, OutcomeItem, ProgressMetric } from '../types';
 
 export const paths: Path[] = [
   {
     id: 'feminine-shape',
     number: '01',
-    title: 'القوام الأنثوي',
+    title: REGISTRATION_PATHS['feminine-shape'],
     titleEn: 'Feminine Shape',
     subtitle: 'Feminine Shape',
     subtitleAr: 'القوام الأنثوي',
@@ -22,7 +23,7 @@ export const paths: Path[] = [
   {
     id: 'weight-gain',
     number: '02',
-    title: 'زيادة الوزن الصحية والأنثوية',
+    title: REGISTRATION_PATHS['weight-gain'],
     titleEn: 'Healthy Feminine Weight Gain',
     subtitle: 'Healthy Feminine Weight Gain',
     subtitleAr: 'زيادة الوزن الصحية والأنثوية',
@@ -40,7 +41,7 @@ export const paths: Path[] = [
   {
     id: 'fat-loss',
     number: '03',
-    title: 'التنحيف والنحت',
+    title: REGISTRATION_PATHS['fat-loss'],
     titleEn: 'Fat Loss & Sculpt',
     subtitle: 'Fat Loss & Sculpt',
     subtitleAr: 'التنحيف والنحت',
@@ -58,7 +59,7 @@ export const paths: Path[] = [
   {
     id: 'recomposition',
     number: '04',
-    title: 'إعادة تشكيل الجسم',
+    title: REGISTRATION_PATHS['recomposition'],
     titleEn: 'Body Recomposition',
     subtitle: 'Body Recomposition',
     subtitleAr: 'إعادة تشكيل الجسم',
@@ -76,7 +77,7 @@ export const paths: Path[] = [
   {
     id: 'glute-lower',
     number: '05',
-    title: 'الأرداف والجزء السفلي',
+    title: REGISTRATION_PATHS['glute-lower'],
     titleEn: 'Glute & Lower Body',
     subtitle: 'Glute & Lower Body',
     subtitleAr: 'الأرداف والجزء السفلي',
@@ -94,7 +95,7 @@ export const paths: Path[] = [
   {
     id: 'home-transformation',
     number: '06',
-    title: 'التحول من المنزل',
+    title: REGISTRATION_PATHS['home-transformation'],
     titleEn: 'Home Transformation',
     subtitle: 'Home Transformation',
     subtitleAr: 'التحول من المنزل',
@@ -114,7 +115,7 @@ export const paths: Path[] = [
   {
     id: 'therapeutic-health',
     number: '07',
-    title: 'التغذية العلاجية والحالات الصحية',
+    title: REGISTRATION_PATHS['therapeutic-health'],
     titleEn: 'Therapeutic & Health Care',
     subtitle: 'Therapeutic & Health Care',
     subtitleAr: 'التغذية العلاجية والحالات الصحية',
@@ -197,14 +198,11 @@ export const membershipFeatures: FeatureItem[] = [
 
 export const pricingTiers: PricingTier[] = [
   {
-    id: 'plus',
-    name: 'باقة الشهرين (Plus)',
+    ...REGISTRATION_PLANS.plus,
     nameEn: '2 Months Membership (Plus)',
     description: 'رحلة متكاملة لمدة شهرين تتضمن التقييم الشامل، التغذية، التمارين والمتابعة اليومية المستمرة',
     descriptionEn: 'A comprehensive 2-month transformation journey including in-depth assessment, custom nutrition, training, and continuous daily WhatsApp coaching.',
-    priceSAR: 100,
     priceUSD: 25,
-    duration: 'شهران (2 Months)',
     durationEn: '2 Months',
     durationMonths: 2,
     features: [
@@ -226,14 +224,11 @@ export const pricingTiers: PricingTier[] = [
     highlighted: true,
   },
   {
-    id: 'premium',
-    name: 'باقة الـ 3 أشهر (Premium)',
+    ...REGISTRATION_PLANS.premium,
     nameEn: '3 Months Membership (Premium)',
     description: 'رحلة تحول شاملة لمدة 3 أشهر لتحقيق أقصى استقرار للنتائج والقوام الأنثوي المنسق',
     descriptionEn: 'A full 3-month total body transformation journey designed for peak muscle toning, feminine curve enhancement, and lasting lifestyle habits.',
-    priceSAR: 150,
     priceUSD: 40,
-    duration: 'ثلاثة أشهر (3 Months)',
     durationEn: '3 Months',
     durationMonths: 3,
     features: [

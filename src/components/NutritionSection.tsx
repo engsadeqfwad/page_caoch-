@@ -1,5 +1,5 @@
 import { nutritionCards } from '../data';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 export default function NutritionSection() {
   const { lang, t, dir } = useLang();

@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight, ChevronDown, Sparkles } from 'lucide-react';
 import heroImg from '../assets/image.png';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 export default function Hero() {
   const { lang, t, dir } = useLang();

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import LanguageToggle from './LanguageToggle';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

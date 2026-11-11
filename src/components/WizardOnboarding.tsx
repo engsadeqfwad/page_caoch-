@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { parsePhoneNumberFromString } from 'libphonenumber-js/mobile';
 import { 
   Sparkles, 
@@ -21,8 +21,11 @@ import { paths, pricingTiers } from '../data';
 import SubscriptionTermsInfo from './SubscriptionTermsInfo';
 import LanguageToggle from './LanguageToggle';
 import WheelPicker from './WheelPicker';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 import { phoneCountries, type PhoneCountry } from '../data/phoneCountries';
+import WizardTopBar from './WizardTopBar';
+import { REGISTRATION_LIMITS, REGISTRATION_PLANS, UUID_PATTERN, getBmiAnalysis, validateRegistration } from '../../supabase/functions/_shared/registration';
+import { clearSubmissionAttempt, normalizePhoneInput, registrationStorage, submissionIdFor } from '../lib/registration';
 
 const SECURE_REGISTRATION_ENDPOINT = import.meta.env.VITE_REGISTRATION_ENDPOINT?.trim()
   || 'https://jajwrjblsbdfbhbrfyku.supabase.co/functions/v1/submit-registration';
@@ -33,9 +36,14 @@ interface WizardProps {
 
 export default function WizardOnboarding({ onComplete }: WizardProps) {
   const { lang, t, dir } = useLang();
+  const { planId: routePlanId } = useParams();
+  const initialPlanId = routePlanId && Object.hasOwn(REGISTRATION_PLANS, routePlanId) ? routePlanId : 'plus';
+  const submitting = useRef(false);
+  const attempt = useRef<{ payload: string; id: string } | null>(null);
+  const [registrationId, setRegistrationId] = useState('');
 
   // Main Step State
-  const [step, setStep] = useState<'welcome' | 'questions' | 'calculating' | 'recommendation' | 'success'>('welcome');
+  const [step, setStep] = useState<'welcome' | 'questions' | 'recommendation' | 'success'>('welcome');
   const [qIndex, setQIndex] = useState(0);
 
   // Form Data State
@@ -49,17 +57,16 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     experienceLevel: 'beginner',
     trainingDays: 3,
     lifestyle: 'office',
-    healthIssues: 'لا يوجد',
-    medications: 'لا يوجد',
+    healthIssues: '',
+    medications: '',
     phone: '',
     instagram: '',
-    selectedPlanId: 'plus',
+    selectedPlanId: initialPlanId,
+    website: '',
   });
 
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [calcProgress, setCalcProgress] = useState(15);
-  const [checkState, setCheckState] = useState([false, false, false, false]);
 
   // Country Code Selection State
   const [selectedCountry, setSelectedCountry] = useState<PhoneCountry>(phoneCountries[0]);
@@ -95,31 +102,10 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   const heightM = formData.height / 100;
   const bmiValue = parseFloat((formData.weight / (heightM * heightM)).toFixed(1));
 
-  let bmiCategory = t('وزن طبيعي ومثالي', 'Normal & Ideal Weight');
-  let bmiColor = 'text-emerald-400';
-  let physicalNeed: 'weight-gain' | 'moderate-gain' | 'ideal' | 'fat-loss' | 'high-fat-loss' = 'ideal';
-
-  if (bmiValue < 18.5) {
-    bmiCategory = t('نقص في الوزن (يحتاج زيادة امتلاء أنثوي)', 'Underweight (Needs feminine fullness & weight gain)');
-    bmiColor = 'text-amber-400';
-    physicalNeed = 'weight-gain';
-  } else if (bmiValue >= 18.5 && bmiValue <= 21.0) {
-    bmiCategory = t('متوسط (يحتاج زيادة وزن قليلة وامتلاء أنثوي)', 'Average (Needs slight weight gain & feminine fullness)');
-    bmiColor = 'text-amber-300';
-    physicalNeed = 'moderate-gain';
-  } else if (bmiValue > 21.0 && bmiValue < 25.0) {
-    bmiCategory = t('وزن طبيعي ومثالي', 'Normal & Ideal Weight');
-    bmiColor = 'text-emerald-400';
-    physicalNeed = 'ideal';
-  } else if (bmiValue >= 25.0 && bmiValue < 30.0) {
-    bmiCategory = t('زيادة بسيطة في الوزن (يحتاج نحت وتنحيف)', 'Slight Overweight (Needs sculpting & fat loss)');
-    bmiColor = 'text-amber-300';
-    physicalNeed = 'fat-loss';
-  } else if (bmiValue >= 30.0) {
-    bmiCategory = t('زيادة ملحوظة / سمنة (يحتاج خفض دهون ونحت)', 'Overweight / Obesity (Needs fat reduction & sculpting)');
-    bmiColor = 'text-rose-400';
-    physicalNeed = 'high-fat-loss';
-  }
+  const bmiAnalysis = getBmiAnalysis(bmiValue);
+  const bmiCategory = t(bmiAnalysis.category, bmiAnalysis.categoryEn);
+  const bmiColor = bmiAnalysis.color;
+  const physicalNeed = bmiAnalysis.physicalNeed;
 
   const isLowWeight = physicalNeed === 'weight-gain' || physicalNeed === 'moderate-gain';
   const isHighWeight = physicalNeed === 'fat-loss' || physicalNeed === 'high-fat-loss';
@@ -145,10 +131,10 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     );
   } else {
     isMisaligned = false;
-    advisoryTitle = t('✅ توافق ممتاز مع التحليل البدني', '✅ Excellent Match with Physical Analysis');
+    advisoryTitle = t('مراجعة أولية للمسار المختار', 'Initial Review of Your Selected Path');
     advisoryMessage = t(
-      `اختياركِ لمسار «${selectedPathObj.title}» متوافق تماماً مع مؤشر كتلة جسمكِ الحالي (${bmiCategory})، وسيقوم النظام بتفصيل احتياجكِ بناءً عليه.`,
-      `Your choice of the «${selectedPathObj.titleEn || selectedPathObj.subtitle}» path aligns smoothly with your current BMI (${bmiCategory}). The program will be tailored to your goals accordingly.`
+      `اختياركِ لمسار «${selectedPathObj.title}» لا يظهر معه تعارض مبدئي وفق مؤشر كتلة جسمكِ الحالي (${bmiCategory})، وستراجع المدربة حالتكِ قبل إعداد البرنامج.`,
+      `Your choice of the «${selectedPathObj.titleEn || selectedPathObj.subtitle}» path shows no initial conflict based on your current BMI (${bmiCategory}). Your coach will review your case before preparing your program.`
     );
   }
 
@@ -156,37 +142,6 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [step, qIndex]);
-
-  // Calculation Screen Simulation Effect
-  useEffect(() => {
-    if (step === 'calculating') {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      const timer1 = setTimeout(() => setCalcProgress(45), 400);
-      const timer2 = setTimeout(() => {
-        setCalcProgress(78);
-        setCheckState([true, true, false, false]);
-      }, 900);
-      const timer3 = setTimeout(() => {
-        setCalcProgress(94);
-        setCheckState([true, true, true, false]);
-      }, 1500);
-      const timer4 = setTimeout(() => {
-        setCalcProgress(100);
-        setCheckState([true, true, true, true]);
-      }, 2100);
-      const timer5 = setTimeout(() => {
-        setStep('recommendation');
-      }, 2600);
-
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-        clearTimeout(timer3);
-        clearTimeout(timer4);
-        clearTimeout(timer5);
-      };
-    }
-  }, [step]);
 
   const TOTAL_STEPS = 9;
   const currentStepNum = qIndex + 1;
@@ -199,7 +154,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
       return;
     }
     if (qIndex === 8) {
-      if (!formData.country.trim()) {
+      if (formData.country.trim().length < 2) {
         setErrorMsg(t('يرجى إدخال دولة الإقامة قبل المتابعة', 'Please enter your country of residence before continuing'));
         return;
       }
@@ -214,7 +169,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         setErrorMsg(t('يرجى إدخال يوزر إنستجرام صحيح بالأحرف الإنجليزية', 'Please enter a valid Instagram username using English characters'));
         return;
       }
-      setStep('calculating');
+      setStep('recommendation');
       return;
     }
     setQIndex((prev) => prev + 1);
@@ -229,121 +184,66 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
     }
   };
 
-  // Submit securely through the Supabase Edge Function.
+  // Keep the same attempt ID after timeouts so a saved request is never inserted twice.
   const submitRegistration = async (planId: string) => {
+    if (submitting.current) return;
+    submitting.current = true;
     setLoadingSubmit(true);
     setErrorMsg('');
-    const chosenTier = pricingTiers.find((t) => t.id === planId) || pricingTiers[0];
-    const chosenPath = paths.find((p) => p.id === formData.pathId)?.title || formData.pathId;
-    const normalizedPhone = parsedPhone?.number || `${selectedCountry.dialCode}${formData.phone.replace(/\D/g, '')}`;
-
-    const secureRegistrationPayload = {
-      age: formData.age,
-      country: formData.country,
-      phoneCountryCode: selectedCountry.code,
-      phoneCountryName: selectedCountry.name,
-      phone: normalizedPhone,
-      instagram: formData.instagram,
-      height: formData.height,
-      weight: formData.weight,
-      pathId: formData.pathId,
-      pathName: chosenPath,
-      trainingLocation: formData.trainingLocation,
-      experienceLevel: formData.experienceLevel,
-      trainingDays: formData.trainingDays,
-      lifestyle: formData.lifestyle,
-      healthIssues: formData.healthIssues,
-      medications: formData.medications,
-      selectedPlan: {
-        id: chosenTier.id,
-        name: chosenTier.name,
-        priceSAR: chosenTier.priceSAR,
-        duration: chosenTier.duration,
-      },
-      language: lang,
-      website: '',
+    const chosenTier = pricingTiers.find((tier) => tier.id === planId) || pricingTiers[0];
+    const payload = {
+      age: formData.age, country: formData.country.trim(),
+      phoneCountryCode: selectedCountry.code, phoneCountryName: selectedCountry.name,
+      phone: parsedPhone?.number || '', instagram: formData.instagram,
+      height: formData.height, weight: formData.weight,
+      pathId: formData.pathId, pathName: selectedPathObj.title,
+      trainingLocation: formData.trainingLocation, experienceLevel: formData.experienceLevel,
+      trainingDays: formData.trainingDays, lifestyle: formData.lifestyle,
+      healthIssues: formData.healthIssues.trim(), medications: formData.medications.trim(),
+      selectedPlan: { id: chosenTier.id, name: chosenTier.name, priceSAR: chosenTier.priceSAR, duration: chosenTier.duration },
+      language: lang, website: formData.website,
     };
-
     try {
+      if (!isPhoneValid || !validateRegistration(payload).ok) {
+        setErrorMsg(t('يرجى مراجعة الإجابات ووسائل التواصل قبل اعتماد الطلب.', 'Please review your answers and contact details before confirming.'));
+        return;
+      }
+      const serialized = JSON.stringify(payload);
+      const storage = registrationStorage();
+      if (attempt.current?.payload !== serialized) {
+        attempt.current = { payload: serialized, id: await submissionIdFor(payload, storage) };
+      }
       const res = await fetch(SECURE_REGISTRATION_ENDPOINT, {
-        method: 'POST',
+        method: 'POST', signal: AbortSignal.timeout(30_000),
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(secureRegistrationPayload),
+        body: JSON.stringify({ ...payload, submissionId: attempt.current.id }),
       });
-
-      const result = await res.json().catch(() => null) as { success?: boolean; message?: string } | null;
-
-      if (res.ok && result?.success === true) {
-        setFormData({ ...formData, selectedPlanId: planId });
+      const result = await res.json().catch(() => null) as { success?: boolean; registrationId?: string; code?: string } | null;
+      if (res.ok && result?.success === true && typeof result.registrationId === 'string' && UUID_PATTERN.test(result.registrationId)) {
+        setRegistrationId(result.registrationId);
+        setFormData((current) => ({ ...current, selectedPlanId: planId }));
+        clearSubmissionAttempt(storage);
         setStep('success');
         window.scrollTo(0, 0);
-        if (onComplete) onComplete();
+        onComplete?.();
+      } else if (res.status === 429) {
+        setErrorMsg(t('وصلتِ إلى الحد المسموح من الطلبات. يرجى الانتظار عشر دقائق قبل المحاولة.', 'The submission limit has been reached. Please wait ten minutes before trying again.'));
+      } else if (res.status === 400 || res.status === 415 || res.status === 413) {
+        setErrorMsg(t('يرجى مراجعة البيانات المدخلة وأطوال النصوص ثم المحاولة مجدداً.', 'Please review your information and text lengths, then try again.'));
+      } else if (res.status === 409) {
+        attempt.current = null;
+        clearSubmissionAttempt(storage);
+        setErrorMsg(t('تغيرت بيانات المحاولة السابقة. يرجى اعتماد البيانات مرة أخرى.', 'The previous attempt has different details. Please confirm your information again.'));
       } else {
-        setErrorMsg(t(
-          'تعذر إرسال بياناتكِ حالياً. يرجى المحاولة مرة أخرى بعد قليل.',
-          'Your information could not be submitted right now. Please try again shortly.'
-        ));
+        setErrorMsg(t('تعذر تأكيد حفظ طلبكِ حالياً. يمكنكِ إعادة المحاولة بنفس البيانات.', 'We could not confirm your registration yet. You can retry with the same details.'));
       }
     } catch {
-      setErrorMsg(t('تعذر الاتصال بالسيرفر. يرجى التحقق من اتصال الإنترنت.', 'Could not connect to the server. Please check your internet connection.'));
+      setErrorMsg(t('لم نتمكن من تأكيد النتيجة بسبب الاتصال. تحققي من الإنترنت وأعيدي المحاولة بنفس البيانات.', 'We could not confirm the result because of a connection issue. Check your connection and retry with the same details.'));
     } finally {
+      submitting.current = false;
       setLoadingSubmit(false);
     }
   };
-
-  // -------------------------------------------------------------
-  // REUSABLE TOP BAR (Natural transparent header blending into the page background)
-  // -------------------------------------------------------------
-  const WizardTopBar = ({ 
-    onBack, 
-    stepLabel, 
-    percent,
-    showProgress = true 
-  }: { 
-    onBack: () => void; 
-    stepLabel: string; 
-    percent: number;
-    showProgress?: boolean;
-  }) => (
-    <div className="relative z-20 max-w-2xl mx-auto w-full pt-4 pb-2">
-      <div className="flex items-center justify-between text-xs text-taupe mb-2.5 font-bold">
-        {/* Back Button */}
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-1.5 hover:text-white transition-colors"
-        >
-          {lang === 'ar' ? <ArrowRight size={16} className="text-gold" /> : <ArrowLeft size={16} className="text-gold" />}
-          <span>{t('السابق', 'Back')}</span>
-        </button>
-
-        {/* Step Status and Counter in Center */}
-        <span className="text-xs md:text-sm font-bold text-white/90">
-          {stepLabel}
-        </span>
-
-        {/* Progress % and Language Toggle */}
-        <div className="flex items-center gap-3">
-          {showProgress && (
-            <span className="text-xs font-extrabold text-gold">
-              {percent}%
-            </span>
-          )}
-          <LanguageToggle />
-        </div>
-      </div>
-
-      {/* Progress Track Line */}
-      {showProgress && (
-        <div className="w-full h-2 rounded-full bg-dark-900 overflow-hidden border border-white/10">
-          <div 
-            className="h-full bg-gradient-to-r from-rose-500 via-gold to-amber-400 transition-all duration-300 rounded-full"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-      )}
-    </div>
-  );
 
   // -------------------------------------------------------------
   // RENDER STEP 1: WELCOME SCREEN
@@ -409,7 +309,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
               {lang === 'ar' ? <ArrowLeft size={20} /> : <ArrowRight size={20} />}
             </button>
             <p className="text-xs text-taupe/70 font-medium">
-              {t('✨ النتيجة والتوصية تظهر لكِ مباشرة قبل تأكيد الدفع', '✨ Results and recommendations appear directly before payment confirmation')}
+              {t('✨ اطلعي على ملخص إجاباتكِ والباقات قبل اعتماد طلبكِ', '✨ Review your answers and available plans before confirming your registration')}
             </p>
           </div>
 
@@ -418,66 +318,6 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
         <div className="py-2 text-center text-[11px] text-taupe/60">
           {t('منظومة التدريب والتغذية الذكية © 2026', 'Smart Coaching & Nutrition System © 2026')}
         </div>
-      </div>
-    );
-  }
-
-  // -------------------------------------------------------------
-  // RENDER STEP 2: CALCULATING ANIMATION SCREEN
-  // -------------------------------------------------------------
-  if (step === 'calculating') {
-    return (
-      <div className="min-h-screen bg-dark-950 flex flex-col justify-between px-4 py-8 relative" dir={dir}>
-        <div className="w-full max-w-md mx-auto flex justify-end">
-          <LanguageToggle />
-        </div>
-
-        <div className="absolute inset-0 bg-dark-radial" />
-        <div className="relative z-10 max-w-md w-full mx-auto text-center space-y-8 my-auto">
-          
-          <div className="text-6xl md:text-7xl font-black gradient-text animate-pulse">
-            {calcProgress}%
-          </div>
-          
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-white">
-              {t('جاري تحليل بياناتكِ وتجهيز خطتكِ...', 'Analyzing your data and preparing your plan...')}
-            </h2>
-            <p className="text-xs text-taupe">
-              {t('نعمل على صياغة التوصية التغذوية والتدريبية المناسبة', 'We are formulating the appropriate nutrition and training recommendation')}
-            </p>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="w-full h-2 rounded-full bg-dark-800 overflow-hidden border border-white/10">
-            <div 
-              className="h-full bg-gradient-to-r from-rose-500 via-gold to-amber-400 transition-all duration-300 rounded-full"
-              style={{ width: `${calcProgress}%` }}
-            />
-          </div>
-
-          {/* Dynamic Checklist */}
-          <div className={`space-y-3 bg-dark-900/60 p-5 rounded-2xl border border-white/10 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-            {[
-              { labelAr: 'تحليل إجاباتكِ والبيانات البدنية', labelEn: 'Analyzing your answers and physical data' },
-              { labelAr: 'حساب مؤشر كتلة الجسم (BMI)', labelEn: 'Calculating BMI index' },
-              { labelAr: 'تحديد مسار التغذية والتمارين المناسب', labelEn: 'Determining suitable nutrition and training path' },
-              { labelAr: 'تجهيز توصية الخطة والباقة النهائية', labelEn: 'Preparing the plan recommendation and final package' },
-            ].map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 text-sm">
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors shrink-0 ${checkState[idx] ? 'bg-gold text-dark-950' : 'border border-taupe/40 text-transparent'}`}>
-                  <Check size={12} strokeWidth={3} />
-                </div>
-                <span className={checkState[idx] ? 'text-white font-bold' : 'text-taupe/60'}>
-                  {lang === 'ar' ? item.labelAr : item.labelEn}
-                </span>
-              </div>
-            ))}
-          </div>
-
-        </div>
-
-        <div className="py-2" />
       </div>
     );
   }
@@ -494,9 +334,10 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
             setStep('questions');
             setQIndex(8);
           }}
-          stepLabel={t('النتيجة والتوصية النهائية 🎯', 'Final Result & Recommendation 🎯')}
+          stepLabel={t('التقييم الأولي واختيار الباقة 🎯', 'Initial Assessment & Plan Selection 🎯')}
           percent={100}
           showProgress={true}
+          disabled={loadingSubmit}
         />
 
         <div className="absolute inset-0 bg-dark-radial pointer-events-none" />
@@ -507,15 +348,15 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           <div className="text-center space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/15 text-gold text-xs font-bold border border-gold/30">
               <Sparkles size={14} />
-              {t('نتيجة التحليل وتوصية البرنامج', 'Analysis Result & Program Recommendation')}
+              {t('ملخص التقييم الأولي والباقات', 'Initial Assessment & Available Plans')}
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-white">
               {t('مسار', 'Path:')} <span className="gradient-text">«{lang === 'ar' ? selectedPathObj.title : (selectedPathObj.titleEn || selectedPathObj.subtitle)}»</span> 🎯
             </h1>
             <p className="text-taupe text-sm leading-relaxed max-w-xl mx-auto font-medium">
               {t(
-                `بناءً على نتائج قياساتكِ البدنية (BMI: ${bmiValue} — ${bmiCategory}) وهدفكِ المحدد، صممنا لكِ باقات المتابعة التالية:`,
-                `Based on your physical measurements (BMI: ${bmiValue} — ${bmiCategory}) and your specified goal, we tailored the following coaching packages:`
+                `بناءً على نتائج قياساتكِ البدنية (BMI: ${bmiValue} — ${bmiCategory}) وهدفكِ المحدد، يمكنكِ اختيار إحدى باقات المتابعة التالية، وتراجع المدربة تفاصيل حالتكِ:`,
+                `Based on your physical measurements (BMI: ${bmiValue} — ${bmiCategory}) and your specified goal, you can choose a coaching package below. Your coach will review your details:`
               )}
             </p>
           </div>
@@ -529,7 +370,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
 
           {/* Pricing Tiers Grid */}
           <div className="grid md:grid-cols-2 gap-6">
-            {pricingTiers.map((tier) => (
+            {[...pricingTiers].sort((a, b) => Number(b.id === formData.selectedPlanId) - Number(a.id === formData.selectedPlanId)).map((tier) => (
               <div
                 key={tier.id}
                 className="p-6 md:p-8 rounded-3xl border relative flex flex-col justify-between transition-all duration-300 hover:scale-[1.01]"
@@ -540,6 +381,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                 }}
               >
                 <div>
+                  {tier.id === formData.selectedPlanId && <p className="text-xs text-gold font-bold mb-2">{t('الباقة المحددة', 'Selected plan')}</p>}
                   <h3 className="text-xl font-extrabold text-white mb-2">
                     {lang === 'ar' ? tier.name : tier.nameEn}
                   </h3>
@@ -591,6 +433,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           <div className="text-center pt-4">
             <button
               type="button"
+              disabled={loadingSubmit}
               onClick={() => {
                 setStep('questions');
                 setQIndex(8);
@@ -630,7 +473,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
               <CheckCircle2 size={44} />
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-white">
-              {t('تم إرسال بياناتكِ وأصبحت حالياً تحت المراجعة! 🎉', 'Your data has been submitted and is now under review! 🎉')}
+              {t('تم حفظ طلبكِ وأصبح تحت المراجعة! 🎉', 'Your registration has been saved and is under review! 🎉')}
             </h1>
             <p className={`text-taupe text-sm md:text-base leading-relaxed font-medium ${lang === 'en' ? 'text-left' : 'text-right'}`}>
               {t(
@@ -644,6 +487,10 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
               )}
               <strong className="text-cream">{t('حنان خالد', 'Hanan Khalid')}</strong>
               {t(' لتزويدكِ ببقية التفاصيل ثم تزويدك بالنظام والبدء .', ' to provide you with the remaining details and start the program.')}
+            </p>
+
+            <p className="text-xs text-taupe break-all">
+              {t('رقم الطلب: ', 'Registration ID: ')}<span dir="ltr">{registrationId}</span>
             </p>
 
             {/* Physical Alignment Note inside Success Box */}
@@ -703,6 +550,12 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
           </div>
         )}
 
+        <div className="absolute -left-[10000px] w-px h-px overflow-hidden" aria-hidden="true">
+          <label htmlFor="registration-website">Website</label>
+          <input id="registration-website" name="website" type="text" tabIndex={-1} autoComplete="off"
+            value={formData.website} onChange={(event) => setFormData((current) => ({ ...current, website: event.target.value }))} />
+        </div>
+
         {/* QUESTION 0: Age */}
         {qIndex === 0 && (
           <div className="space-y-5 md:space-y-7">
@@ -718,8 +571,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
             <div className="max-w-sm mx-auto w-full">
               <WheelPicker
                 value={formData.age}
-                min={15}
-                max={70}
+                min={REGISTRATION_LIMITS.age.min}
+                max={REGISTRATION_LIMITS.age.max}
                 onChange={(age) => setFormData((current) => ({ ...current, age }))}
                 unit={t('سنة', 'years')}
                 ariaLabel={t('اختيار العمر', 'Select age')}
@@ -749,8 +602,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                 <WheelPicker
                   compact
                   value={formData.height}
-                  min={130}
-                  max={210}
+                  min={REGISTRATION_LIMITS.height.min}
+                  max={REGISTRATION_LIMITS.height.max}
                   onChange={(height) => setFormData((current) => ({ ...current, height }))}
                   unit={t('سم', 'cm')}
                   ariaLabel={t('اختيار الطول', 'Select height')}
@@ -765,8 +618,8 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                 <WheelPicker
                   compact
                   value={formData.weight}
-                  min={30}
-                  max={180}
+                  min={REGISTRATION_LIMITS.weight.min}
+                  max={REGISTRATION_LIMITS.weight.max}
                   onChange={(weight) => setFormData((current) => ({ ...current, weight }))}
                   unit={t('كجم', 'kg')}
                   ariaLabel={t('اختيار الوزن', 'Select weight')}
@@ -973,7 +826,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                 {t('صفّي طبيعة نشاطكِ ويومكِ اليومي', 'Describe your daily activity level')}
               </h2>
               <p className="text-taupe text-xs md:text-sm font-medium">
-                {t('لحساب معدل الأيض اليومي (TDEE) بدقة.', 'To accurately calculate your Total Daily Energy Expenditure (TDEE).')}
+                {t('تساعد هذه المعلومة المدربة على تقدير نشاطكِ واحتياجاتكِ عند مراجعة الطلب.', 'This helps your coach assess your activity and needs when reviewing your registration.')}
               </p>
             </div>
 
@@ -1028,6 +881,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                 </label>
                 <textarea
                   rows={3}
+                  maxLength={REGISTRATION_LIMITS.healthIssues}
                   value={formData.healthIssues}
                   onChange={(e) => setFormData({ ...formData, healthIssues: e.target.value })}
                   placeholder={t('مثال: تكيسات مبايض، خمول غدة، قولون عصبي... (إذا لا يوجد اكتبي: لا يوجد)', 'e.g., PCOS, hypothyroidism, IBS... (If none, write: None)')}
@@ -1042,6 +896,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                 </label>
                 <input
                   type="text"
+                  maxLength={REGISTRATION_LIMITS.medications}
                   value={formData.medications}
                   onChange={(e) => setFormData({ ...formData, medications: e.target.value })}
                   placeholder={t('اذكري اسم الدواء أو اكتبي «لا يوجد»', 'Mention the medication name or write "None"')}
@@ -1072,6 +927,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                 </label>
                 <input
                   type="text"
+                  maxLength={REGISTRATION_LIMITS.country}
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                   placeholder={t('مثال: السعودية، الإمارات، الكويت...', 'e.g., Saudi Arabia, UAE, Kuwait...')}
@@ -1158,7 +1014,7 @@ export default function WizardOnboarding({ onComplete }: WizardProps) {
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/[^0-9\s-]/g, '') })}
+                    onChange={(e) => setFormData({ ...formData, phone: normalizePhoneInput(e.target.value) })}
                     placeholder={selectedCountry.exampleNational}
                     className={`form-input flex-1 min-w-0 text-base font-bold dir-ltr ${showPhoneError ? 'border-rose-500/60' : ''}`}
                     inputMode="tel"

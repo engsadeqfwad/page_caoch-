@@ -1,5 +1,5 @@
 import { outcomes } from '../data';
-import { useLang } from '../context/LanguageContext';
+import { useLang } from '../context/language';
 
 export default function OutcomesSection() {
   const { lang, t, dir } = useLang();
